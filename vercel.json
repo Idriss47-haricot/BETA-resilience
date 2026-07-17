@@ -1,0 +1,21 @@
+{
+  "builds": [
+    {
+      "src": "beta_site/wsgi.py",
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": ["staticfiles/**", "templates/**"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/media/(.*)",
+      "dest": "/media/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "beta_site/wsgi.py"
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenue chez BETA-Résilience</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #1B5E20, #2E7D32);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 30px 20px;
+            background: #f9f9f9;
+            border-radius: 0 0 10px 10px;
+        }
+        .info-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #2E7D32;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        .btn {
+            display: inline-block;
+            background: #2E7D32;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .btn:hover {
+            background: #1B5E20;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+        .identifiants {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 16px;
+        }
+        .warning {
+            color: #856404;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌿 BETA-Résilience</h1>
+            <p>Félicitations ! Votre adhésion est acceptée</p>
+        </div>
+        
+        <div class="content">
+            <p>Bonjour <strong>{{ demande.prenom }} {{ demande.nom }}</strong>,</p>
+            
+            <p>Nous avons le plaisir de vous informer que votre demande d'adhésion au <strong>Groupe BETA-Résilience</strong> a été <strong>acceptée</strong> !</p>
+            
+            <div class="highlight">
+                <p><strong>🔑 Vos identifiants de connexion :</strong></p>
+                <div class="identifiants">
+                    <p><strong>Nom d'utilisateur :</strong> {{ username }}</p>
+                    <p><strong>Mot de passe :</strong> {{ password }}</p>
+                </div>
+                <p class="warning">⚠️ Nous vous recommandons de changer votre mot de passe après votre première connexion.</p>
+            </div>
+            
+            <div class="info-box">
+                <p><strong>📋 Récapitulatif :</strong></p>
+                <ul>
+                    <li><strong>Entité :</strong> {{ demande.get_entite_display|default:"Association" }}</li>
+                    <li><strong>Email :</strong> {{ demande.email }}</li>
+                    <li><strong>Date d'acceptation :</strong> {{ demande.date_traitement|date:"d/m/Y H:i" }}</li>
+                </ul>
+            </div>
+            
+            <p style="text-align: center; margin: 25px 0;">
+                <a href="{{ login_url }}" class="btn">🔐 Se connecter</a>
+            </p>
+            
+            <p><strong>Une fois connecté, vous pourrez :</strong></p>
+            <ul>
+                <li>✅ Accéder à votre espace membre</li>
+                <li>📥 Télécharger des documents réservés</li>
+                <li>📝 Suivre l'avancement de vos demandes</li>
+                <li>🤝 Participer aux activités du Groupe</li>
+            </ul>
+            
+            <p><strong>📌 Informations importantes :</strong></p>
+            <ul>
+                <li>🔒 Changez votre mot de passe lors de votre première connexion</li>
+                <li>📧 Conservez cet email pour vos archives</li>
+                <li>📞 Contactez-nous si vous rencontrez des difficultés</li>
+            </ul>
+            
+            <p>Pour toute question, n'hésitez pas à nous contacter :</p>
+            <p>
+                📧 <a href="mailto:{{ site_config.email }}">{{ site_config.email }}</a><br>
+                📞 {{ site_config.phone|default:"6XX-XXX-XXX" }}
+            </p>
+            
+            <p>Cordialement,<br>
+            <strong>L'équipe BETA-Résilience</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2026 BETA-Résilience - Tous droits réservés</p>
+            <p>
+                <a href="{{ site_url }}">Visitez notre site</a> |
+                <a href="mailto:{{ site_config.email }}">Contactez-nous</a>
+            </p>
+            <p style="font-size: 10px; color: #999;">
+                Cet email a été envoyé automatiquement. Merci de ne pas y répondre directement.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

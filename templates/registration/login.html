@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+{% block title %}Connexion - BETA-Résilience{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 mx-auto">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h2 class="text-success text-center">Connexion</h2>
+                        <p class="text-muted text-center">Connectez-vous à votre espace membre</p>
+                        <form method="post">
+                            {% csrf_token %}
+                            {% if form.errors %}
+                            <div class="alert alert-danger">Nom d'utilisateur ou mot de passe incorrect.</div>
+                            {% endif %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nom d'utilisateur</label>
+                                <input type="text" name="username" class="form-control" required placeholder="Votre nom d'utilisateur">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Mot de passe</label>
+                                <input type="password" name="password" class="form-control" required placeholder="Votre mot de passe">
+                            </div>
+                            <input type="hidden" name="next" value="{{ next }}">
+                            <button type="submit" class="btn btn-success w-100 btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i> Se connecter
+                            </button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <p class="text-muted small">
+                                Pas encore membre ? 
+                                <a href="{% url 'membres:adhesion' %}" class="text-success">Adhérer</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

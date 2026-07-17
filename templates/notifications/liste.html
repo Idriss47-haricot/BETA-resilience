@@ -1,0 +1,143 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Mes notifications - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-4">
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'membres:dashboard' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tachometer-alt me-2"></i> Tableau de bord
+                        </a>
+                        <a href="{% url 'membres:profil' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-edit me-2"></i> Mon profil
+                        </a>
+                        <a href="{% url 'membres:mes-demandes' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-file-alt me-2"></i> Mes demandes
+                        </a>
+                        <a href="{% url 'notifications:liste' %}" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-bell me-2"></i> Notifications
+                            <span class="badge bg-danger float-end">{{ notifications|length }}</span>
+                        </a>
+                        <a href="{% url 'logout' %}" class="list-group-item list-group-item-action text-danger">
+                            <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contenu -->
+            <div class="col-lg-9">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-bell text-success me-2"></i>
+                                Mes notifications
+                                <span class="badge bg-danger ms-2">{{ notifications|length }}</span>
+                            </h5>
+                            <div>
+                                <a href="{% url 'notifications:marquer_toutes_lues' %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-check-double"></i> Tout marquer comme lu
+                                </a>
+                                <a href="{% url 'notifications:preferences' %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-cog"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body p-0">
+                        {% if notifications %}
+                            {% for notification in notifications %}
+                            <div class="notification-item p-3 border-bottom {% if not notification.est_lue %}bg-light{% endif %}" 
+                                 data-id="{{ notification.id }}">
+                                <div class="d-flex align-items-start">
+                                    <div class="notification-icon me-3" style="font-size: 1.5rem; color: {{ notification.get_couleur }};">
+                                        <i class="fas {{ notification.get_icone }}"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-1 {% if not notification.est_lue %}fw-bold{% endif %}">
+                                                {{ notification.titre }}
+                                            </h6>
+                                            <small class="text-muted">
+                                                {{ notification.date_creation|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </div>
+                                        <p class="mb-1 text-muted small">{{ notification.message }}</p>
+                                        <div class="d-flex gap-2">
+                                            {% if notification.lien %}
+                                            <a href="{% url 'notifications:detail' notification.pk %}" class="btn btn-sm btn-outline-success">
+                                                Voir
+                                            </a>
+                                            {% endif %}
+                                            {% if not notification.est_lue %}
+                                            <button class="btn btn-sm btn-outline-secondary marquer-lue" data-id="{{ notification.id }}">
+                                                Marquer comme lu
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-bell-slash text-muted" style="font-size: 3rem;"></i>
+                                <p class="text-muted mt-3">Aucune notification</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Marquer une notification comme lue via AJAX
+    document.querySelectorAll('.marquer-lue').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const item = this.closest('.notification-item');
+            const icon = item.querySelector('.notification-icon i');
+            
+            fetch(`/notifications/marquer-lue/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    item.classList.remove('bg-light');
+                    const title = item.querySelector('h6');
+                    title.classList.remove('fw-bold');
+                    this.remove();
+                    // Mettre à jour le badge
+                    const badge = document.querySelector('.badge.bg-danger');
+                    if (badge) {
+                        const count = parseInt(badge.textContent) - 1;
+                        if (count > 0) {
+                            badge.textContent = count;
+                        } else {
+                            badge.remove();
+                        }
+                    }
+                }
+            });
+        });
+    });
+});
+</script>
+
+{% endblock %}

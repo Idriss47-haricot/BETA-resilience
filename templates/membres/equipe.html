@@ -1,0 +1,95 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Équipe dirigeante - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header py-5" style="background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white;">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Équipe dirigeante</h1>
+        <p class="lead">Des experts au service de la résilience</p>
+    </div>
+</section>
+
+<!-- Contenu -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="text-center mb-5" data-aos="fade-up">
+                    <h2 class="text-success">Bureau Exécutif</h2>
+                    <p class="text-muted">L'équipe qui pilote le Groupe BETA-Résilience</p>
+                </div>
+                
+                <!-- Bureau Exécutif -->
+                <div class="row g-4 justify-content-center">
+                    {% for membre in bureau_executif %}
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:100 }}">
+                        <div class="card membre-card h-100 border-0 shadow-sm hover-shadow transition text-center">
+                            <div class="card-body p-4">
+                                <div class="membre-photo mx-auto mb-3" style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 4px solid #2E7D32;">
+                                    <img src="{{ membre.photo_url }}" alt="{{ membre.nom_complet }}" class="w-100 h-100" style="object-fit: cover;">
+                                </div>
+                                <h5 class="fw-bold mb-0">{{ membre.prenom }} {{ membre.nom }}</h5>
+                                <p class="text-success small fw-semibold">{{ membre.fonction.nom|default:"Membre" }}</p>
+                                <p class="text-muted small">{{ membre.biographie|truncatewords:20 }}</p>
+                                <a href="{% url 'membres:detail' membre.slug %}" class="btn btn-outline-success btn-sm">
+                                    Voir le profil <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center text-muted">
+                        <p>Aucun membre du bureau pour le moment.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Autres membres -->
+                {% if autres_membres %}
+                <div class="text-center mt-5" data-aos="fade-up">
+                    <h2 class="text-success">Membres de l'association</h2>
+                    <p class="text-muted">Tous les membres engagés pour la résilience</p>
+                </div>
+                
+                <div class="row g-3 mt-3">
+                    {% for membre in autres_membres %}
+                    <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:200 }}">
+                        <div class="card membre-card-small h-100 border-0 shadow-sm text-center p-3 hover-shadow transition">
+                            <div class="membre-photo mx-auto mb-2" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden;">
+                                <img src="{{ membre.photo_url }}" alt="{{ membre.nom_complet }}" class="w-100 h-100" style="object-fit: cover;">
+                            </div>
+                            <h6 class="fw-bold mb-0" style="font-size: 14px;">{{ membre.prenom }} {{ membre.nom }}</h6>
+                            <p class="text-muted small" style="font-size: 11px;">{{ membre.fonction.nom|default:"Membre" }}</p>
+                            <a href="{% url 'membres:detail' membre.slug %}" class="text-success" style="font-size: 12px;">
+                                Voir <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.membre-card:hover {
+    transform: translateY(-5px);
+}
+.membre-card-small:hover {
+    transform: translateY(-3px);
+}
+.transition {
+    transition: all 0.3s ease;
+}
+.hover-shadow:hover {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+}
+</style>
+
+{% endblock %}

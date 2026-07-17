@@ -1,0 +1,183 @@
+{% load static %}
+
+<div class="modal-body p-4">
+    <div id="entite-info" class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        Vous soumettez une demande pour : 
+        <strong id="entite-nom">BETA-Résilience</strong>
+    </div>
+    
+    <form method="post" action="{% url 'demandes:soumettre' %}" enctype="multipart/form-data" id="demandeForm">
+        {% csrf_token %}
+        
+        <!-- Champ honeypot pour anti-spam -->
+        <input type="text" name="honeypot" class="d-none" value="">
+        
+        <!-- Champ entité caché -->
+        <input type="hidden" name="entite" id="id_entite_hidden" value="{{ entite }}">
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nom <span class="text-danger">*</span></label>
+                    <input type="text" name="nom" class="form-control" required placeholder="Votre nom">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Prénom <span class="text-danger">*</span></label>
+                    <input type="text" name="prenom" class="form-control" required placeholder="Votre prénom">
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                    <input type="email" name="email" class="form-control" required placeholder="votre@email.com">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Téléphone <span class="text-danger">*</span></label>
+                    <input type="tel" name="telephone" class="form-control" required placeholder="6XX-XXX-XXX">
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Type de demande <span class="text-danger">*</span></label>
+                    <select name="type_demande" id="id_type_demande" class="form-select" required>
+                        <option value="">Sélectionnez un type</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6" id="autre_type_container" style="display: none;">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Autre type (précisez)</label>
+                    <input type="text" name="autre_type" class="form-control" placeholder="Précisez votre type de demande">
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Société / Institution</label>
+                    <input type="text" name="societe" class="form-control" placeholder="Nom de votre société (optionnel)">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Fonction</label>
+                    <input type="text" name="fonction" class="form-control" placeholder="Votre fonction (optionnel)">
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label fw-bold">Objet de la demande <span class="text-danger">*</span></label>
+            <input type="text" name="objet" class="form-control" required placeholder="Sujet de votre demande">
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label fw-bold">Message <span class="text-danger">*</span></label>
+            <textarea name="message" class="form-control" rows="4" required placeholder="Décrivez votre demande en détail..."></textarea>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label fw-bold">Document joint (optionnel)</label>
+            <input type="file" name="fichier" class="form-control">
+            <small class="text-muted">Formats acceptés : PDF, DOC, DOCX (max 5 Mo)</small>
+        </div>
+        
+        <button type="submit" class="btn btn-success w-100 btn-lg">
+            <i class="fas fa-paper-plane me-2"></i> Envoyer ma demande
+        </button>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser les types de demande
+    const entite = document.getElementById('id_entite_hidden').value;
+    if (entite) {
+        mettreAJourTypes(entite);
+    }
+});
+
+function mettreAJourTypes(entite) {
+    const TYPES_DEMANDE = {
+        'association': [
+            ['adhesion', 'Adhésion'],
+            ['benefice', 'Bénévolat'],
+            ['don', 'Don'],
+            ['partenariat', 'Partenariat associatif'],
+            ['information', 'Demande d\'information'],
+        ],
+        'bureau_etude': [
+            ['etude', 'Étude environnementale'],
+            ['expertise', 'Expertise technique'],
+            ['conseil', 'Conseil stratégique'],
+            ['formation', 'Formation'],
+            ['prestation', 'Prestation de service'],
+        ],
+        'invest': [
+            ['investissement', 'Investissement'],
+            ['partenariat', 'Partenariat économique'],
+            ['financement', 'Financement de projet'],
+            ['conseil', 'Conseil en investissement'],
+        ],
+        'laboratoire': [
+            ['collaboration', 'Collaboration scientifique'],
+            ['recherche', 'Projet de recherche'],
+            ['publication', 'Publication scientifique'],
+            ['stage', 'Stage / Recherche'],
+            ['partenariat', 'Partenariat académique'],
+        ]
+    };
+    
+    const select = document.getElementById('id_type_demande');
+    const autreContainer = document.getElementById('autre_type_container');
+    
+    if (!select) return;
+    
+    // Vider le select
+    select.innerHTML = '';
+    
+    // Ajouter une option par défaut
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Sélectionnez un type';
+    select.appendChild(defaultOption);
+    
+    // Ajouter les types pour l'entité
+    const types = TYPES_DEMANDE[entite] || [];
+    types.forEach(function(type) {
+        const option = document.createElement('option');
+        option.value = type[0];
+        option.textContent = type[1];
+        select.appendChild(option);
+    });
+    
+    // Ajouter l'option "Autre"
+    const autreOption = document.createElement('option');
+    autreOption.value = 'autre';
+    autreOption.textContent = 'Autre (précisez)';
+    select.appendChild(autreOption);
+    
+    // Masquer le champ autre_type
+    if (autreContainer) {
+        autreContainer.style.display = 'none';
+    }
+    
+    // Réinitialiser le champ autre_type
+    const autreInput = document.querySelector('input[name="autre_type"]');
+    if (autreInput) {
+        autreInput.value = '';
+    }
+}
+</script>

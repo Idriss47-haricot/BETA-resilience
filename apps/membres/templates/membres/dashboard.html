@@ -1,0 +1,43 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <img src="{{ membre.photo.url|default:'/static/images/default-user.png' }}" 
+                             class="rounded-circle mb-3" width="100">
+                        <h4>{{ user.get_full_name }}</h4>
+                        <p class="text-muted">{{ membre.fonction }}</p>
+                        <span class="badge bg-success">Membre Actif</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5><i class="fas fa-file-alt text-success"></i> Mes demandes</h5>
+                                <p class="text-muted small">Voir l'historique de vos demandes</p>
+                                <a href="#" class="btn btn-outline-success btn-sm">Consulter</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5><i class="fas fa-download text-success"></i> Ressources</h5>
+                                <p class="text-muted small">Accéder aux documents réservés</p>
+                                <a href="#" class="btn btn-outline-success btn-sm">Accéder</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

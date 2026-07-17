@@ -1,0 +1,132 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Authentification 2FA - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-success text-white py-3">
+                        <h4 class="mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Authentification à deux facteurs
+                        </h4>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        {% if auth_2fa.est_active %}
+                            <!-- 2FA activée -->
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                L'authentification à deux facteurs est <strong>activée</strong> sur votre compte.
+                            </div>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body text-center">
+                                            <h5>📱 Application</h5>
+                                            <p class="text-muted small">Utilisez Google Authenticator</p>
+                                            <span class="badge bg-success">Actif</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body text-center">
+                                            <h5>🔑 Codes de secours</h5>
+                                            <p class="text-muted small">{{ auth_2fa.methodes_secours|length }} codes disponibles</p>
+                                            <a href="{% url 'authentification:telecharger_codes_secours' %}" class="btn btn-sm btn-success">
+                                                <i class="fas fa-download me-1"></i> Télécharger
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="desactiver">
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Désactiver la 2FA ?')">
+                                        <i class="fas fa-times me-2"></i> Désactiver 2FA
+                                    </button>
+                                    <a href="{% url 'authentification:regenerer_codes_secours' %}" class="btn btn-warning">
+                                        <i class="fas fa-sync me-2"></i> Régénérer les codes
+                                    </a>
+                                </form>
+                            </div>
+                            
+                        {% else %}
+                            <!-- 2FA non activée -->
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                L'authentification à deux facteurs ajoute une couche de sécurité supplémentaire à votre compte.
+                            </div>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body text-center">
+                                            <h5>📱 Étape 1</h5>
+                                            <p class="text-muted small">Installez Google Authenticator</p>
+                                            <div class="d-flex gap-2 justify-content-center">
+                                                <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" class="btn btn-sm btn-dark" target="_blank">
+                                                    <i class="fab fa-google-play"></i> Android
+                                                </a>
+                                                <a href="https://apps.apple.com/fr/app/google-authenticator/id388497605" class="btn btn-sm btn-dark" target="_blank">
+                                                    <i class="fab fa-apple"></i> iOS
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body text-center">
+                                            <h5>📷 Étape 2</h5>
+                                            <p class="text-muted small">Scannez le QR Code</p>
+                                            {% if qr_code %}
+                                            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" style="width:150px;">
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if secret %}
+                            <div class="alert alert-warning mt-3">
+                                <strong>Secret :</strong> <code>{{ secret }}</code>
+                                <br>
+                                <small>Entrez ce code manuellement si vous ne pouvez pas scanner le QR Code.</small>
+                            </div>
+                            {% endif %}
+                            
+                            <form method="post" class="mt-4">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="activer">
+                                <input type="hidden" name="secret" value="{{ secret }}">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Code de validation</label>
+                                    <input type="text" name="code" class="form-control" placeholder="Entrez le code à 6 chiffres" required>
+                                    <small class="text-muted">Entrez le code généré par Google Authenticator</small>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-shield-alt me-2"></i> Activer 2FA
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

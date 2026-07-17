@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Création de compte - Beta Résilience</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #666; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background-color: #218838; }
+        .error { color: red; font-size: 14px; margin-bottom: 15px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Créer votre compte</h2>
+    
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="username">Nom d'utilisateur</label>
+            <input type="text" id="username" name="username" required placeholder="Ex: idrissvm">
+        </div>
+        <div class="form-group">
+            <label for="email">Adresse Email</label>
+            <input type="email" id="email" name="email" required placeholder="votre@email.com">
+        </div>
+        <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <input type="password" id="password" name="password" required placeholder="********">
+        </div>
+        <button type="submit" class="btn">Créer mon compte & me connecter</button>
+    </form>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,82 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Forums - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="text-success">
+                        <i class="fas fa-comments me-2"></i> Forums de discussion
+                    </h1>
+                    {% if user.is_authenticated and categories %}
+                    <a href="{% url 'forums:creer_sujet' categories.0.slug %}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i> Nouveau sujet
+                    </a>
+                    {% endif %}
+                </div>
+                
+                {% for categorie in categories %}
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="{{ categorie.icone }} me-2 text-success"></i>
+                            {{ categorie.nom }}
+                            <small class="text-muted">({{ categorie.sujets.count }} sujets)</small>
+                        </h5>
+                        <a href="{% url 'forums:creer_sujet' categorie.slug %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-plus me-1"></i> Nouveau sujet
+                        </a>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for sujet in categorie.sujets.all|slice:":5" %}
+                        <div class="sujet-item p-3 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if sujet.est_epingle %}
+                                    <span class="badge bg-warning me-1">📌 Épinglé</span>
+                                    {% endif %}
+                                    {% if sujet.est_ferme %}
+                                    <span class="badge bg-secondary me-1">🔒 Fermé</span>
+                                    {% endif %}
+                                    <a href="{% url 'forums:sujet_detail' sujet.slug %}" class="text-decoration-none text-dark fw-bold">
+                                        {{ sujet.titre }}
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">
+                                        Par {{ sujet.auteur.username }} · {{ sujet.date_creation|date:"d/m/Y H:i" }}
+                                        · {{ sujet.messages.count }} messages
+                                    </small>
+                                </div>
+                                <div>
+                                    <a href="{% url 'forums:sujet_detail' sujet.slug %}" class="btn btn-sm btn-outline-success">
+                                        Voir
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="p-3 text-center text-muted">
+                            Aucun sujet dans cette catégorie.
+                            <a href="{% url 'forums:creer_sujet' categorie.slug %}" class="text-success">
+                                Soyez le premier à créer un sujet !
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Aucune catégorie de forum disponible.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

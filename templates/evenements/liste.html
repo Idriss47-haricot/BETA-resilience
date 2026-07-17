@@ -1,0 +1,178 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Événements - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header py-4" style="background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold">📅 Événements</h1>
+                <p class="lead">Participez aux activités de BETA-Résilience</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                {% if user.is_authenticated %}
+                <a href="{% url 'evenements:mes_evenements' %}" class="btn btn-light">
+                    <i class="fas fa-calendar-check me-2"></i> Mes événements
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filtres -->
+<section class="py-3 bg-light border-bottom">
+    <div class="container">
+        <form method="get" class="row g-3 align-items-center">
+            <div class="col-md-3">
+                <select name="type" class="form-select" onchange="this.form.submit()">
+                    <option value="">Tous les types</option>
+                    {% for type, label in types %}
+                    <option value="{{ type }}" {% if type_actuel == type %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="statut" class="form-select" onchange="this.form.submit()">
+                    <option value="">Tous les statuts</option>
+                    {% for statut, label in statuts %}
+                    <option value="{{ statut }}" {% if statut_actuel == statut %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Rechercher..." value="{{ search_query }}">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-2 text-md-end">
+                <a href="{% url 'evenements:liste' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-times"></i> Réinitialiser
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Liste des événements -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            {% for evenement in evenements %}
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:100 }}">
+                <div class="card evenement-card h-100 border-0 shadow-sm hover-shadow transition">
+                    {% if evenement.image %}
+                    <img src="{{ evenement.image.url }}" class="card-img-top" alt="{{ evenement.titre }}" style="height: 180px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                        <i class="fas fa-calendar-alt text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-{{ evenement.get_type_badge }}">
+                                {{ evenement.get_type_evenement_display }}
+                            </span>
+                            <span class="badge bg-{{ evenement.get_statut_badge }}">
+                                {{ evenement.get_statut_display }}
+                            </span>
+                        </div>
+                        <h5 class="card-title fw-bold">{{ evenement.titre }}</h5>
+                        <p class="card-text text-muted small">{{ evenement.description|truncatechars:100 }}</p>
+                        <div class="evenement-meta small text-muted">
+                            <p class="mb-1">
+                                <i class="fas fa-calendar-day me-1"></i>
+                                {{ evenement.date_debut|date:"d/m/Y H:i" }}
+                            </p>
+                            <p class="mb-1">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                {{ evenement.lieu|truncatechars:30 }}
+                            </p>
+                            <p class="mb-1">
+                                <i class="fas fa-users me-1"></i>
+                                {{ evenement.get_nb_inscriptions }}/{{ evenement.capacite_max }} inscrits
+                                {% if evenement.places_restantes > 0 %}
+                                <span class="text-success">({{ evenement.places_restantes }} places)</span>
+                                {% else %}
+                                <span class="text-danger">(Complet)</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                            <a href="{% url 'evenements:detail' evenement.slug %}" class="btn btn-outline-success btn-sm flex-grow-1">
+                                <i class="fas fa-info-circle me-1"></i> Détails
+                            </a>
+                            {% if user.is_authenticated and evenement.statut != 'termine' and evenement.statut != 'annule' %}
+                                {% if evenement.est_inscrit %}
+                                <a href="{% url 'evenements:annuler' evenement.slug %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Annuler votre inscription ?')">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                                {% elif not evenement.est_complet %}
+                                <a href="{% url 'evenements:inscrire' evenement.slug %}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-calendar-times text-muted" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3">Aucun événement trouvé</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        {{ num }}
+                    </a>
+                </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+.evenement-card:hover {
+    transform: translateY(-5px);
+}
+</style>
+
+{% endblock %}

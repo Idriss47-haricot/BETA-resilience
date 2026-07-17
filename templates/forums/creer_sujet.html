@@ -1,0 +1,59 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Nouveau sujet - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'core:accueil' %}">Accueil</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'forums:index' %}">Forums</a></li>
+                        <li class="breadcrumb-item"><a href="{{ categorie.get_absolute_url }}">{{ categorie.nom }}</a></li>
+                        <li class="breadcrumb-item active">Nouveau sujet</li>
+                    </ol>
+                </nav>
+                
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-success text-white py-3">
+                        <h4 class="mb-0">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Nouveau sujet dans "{{ categorie.nom }}"
+                        </h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Titre du sujet <span class="text-danger">*</span></label>
+                                {{ form.titre }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Contenu <span class="text-danger">*</span></label>
+                                {{ form.contenu }}
+                                <small class="text-muted">Utilisez le format texte simple.</small>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-paper-plane me-2"></i> Publier le sujet
+                                </button>
+                                <a href="{{ categorie.get_absolute_url }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i> Annuler
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

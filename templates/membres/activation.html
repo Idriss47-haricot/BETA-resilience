@@ -1,0 +1,122 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Activation du compte - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-success text-white py-3">
+                        <h3 class="mb-0 fw-bold">
+                            <i class="fas fa-user-plus me-2"></i> Activation de votre compte
+                        </h3>
+                    </div>
+                    <div class="card-body p-4">
+                        {% if membre %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Votre demande d'adhésion a été acceptée. Créez votre compte pour accéder à l'espace membre.
+                        </div>
+                        
+                        <div class="info-box mb-4 p-3 bg-light rounded">
+                            <p><strong>👤 Informations :</strong></p>
+                            <p class="mb-1"><strong>Prénom :</strong> {{ membre.prenom }}</p>
+                            <p class="mb-1"><strong>Nom :</strong> {{ membre.nom }}</p>
+                            <p class="mb-0"><strong>Email :</strong> {{ membre.email }}</p>
+                        </div>
+                        
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Prénom</label>
+                                        {{ form.first_name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Nom</label>
+                                        {{ form.last_name }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                {{ form.email }}
+                                <small class="text-muted">L'email ne peut pas être modifié.</small>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nom d'utilisateur <span class="text-danger">*</span></label>
+                                {{ form.username }}
+                                <small class="text-muted">Choisissez un nom d'utilisateur unique.</small>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Mot de passe <span class="text-danger">*</span></label>
+                                        {{ form.password1 }}
+                                        <small class="text-muted">
+                                            Minimum 8 caractères, une majuscule et un chiffre.
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Confirmer le mot de passe <span class="text-danger">*</span></label>
+                                        {{ form.password2 }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="conditions" required>
+                                <label class="form-check-label" for="conditions">
+                                    J'accepte les <a href="#" target="_blank">conditions générales d'utilisation</a>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success btn-lg w-100">
+                                <i class="fas fa-check-circle me-2"></i> Créer mon compte
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Le lien d'activation est invalide ou a expiré.
+                        </div>
+                        <p>Veuillez contacter l'administrateur pour renouveler votre demande.</p>
+                        <a href="{% url 'core:accueil' %}" class="btn btn-success">
+                            <i class="fas fa-home me-2"></i> Retour à l'accueil
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <span class="text-muted small">
+                        🔒 Vos informations sont sécurisées.
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.info-box {
+    border-left: 4px solid #2E7D32;
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #2E7D32; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .btn { display: inline-block; background: #2E7D32; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔔 BETA-Résilience</h1>
+            <p>Notification</p>
+        </div>
+        
+        <div class="content">
+            <h2>{{ notification.titre }}</h2>
+            <p>{{ notification.message|linebreaks }}</p>
+            
+            <p style="margin: 20px 0;">
+                <a href="{{ site_url }}{{ notification.lien|default:'/' }}" class="btn">
+                    Voir plus
+                </a>
+            </p>
+            
+            <p style="font-size: 12px; color: #999;">
+                Vous recevez cet email parce que vous êtes membre de BETA-Résilience.
+                <br>
+                <a href="{{ site_url }}{% url 'notifications:preferences' %}">Gérer mes préférences</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2026 BETA-Résilience - Tous droits réservés</p>
+        </div>
+    </div>
+</body>
+</html>

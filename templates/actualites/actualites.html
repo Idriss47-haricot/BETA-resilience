@@ -1,0 +1,125 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Actualités - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header py-5" style="background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white;">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Actualités</h1>
+        <p class="lead">Suivez l'actualité de BETA-Résilience</p>
+    </div>
+</section>
+
+<!-- Filtres -->
+<section class="py-4 bg-light border-bottom">
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <form method="get" class="d-flex gap-2 flex-wrap">
+                    <select name="categorie" class="form-select" style="width: auto;" onchange="this.form.submit()">
+                        <option value="">Toutes les catégories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.slug }}" {% if categorie_actuelle == cat.slug %}selected{% endif %}>
+                            {{ cat.nom }} ({{ cat.nb_articles }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="input-group" style="width: 250px;">
+                        <input type="text" name="q" class="form-control" placeholder="Rechercher..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'actualites:list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-times"></i> Réinitialiser
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Liste des articles -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            {% for article in articles %}
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:100 }}">
+                <div class="card article-card h-100 border-0 shadow-sm hover-shadow transition">
+                    {% if article.image_couverture %}
+                    <img src="{{ article.image_couverture.url }}" class="card-img-top" alt="{{ article.titre }}" style="height: 180px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="text-muted small">
+                                <i class="far fa-calendar-alt me-1"></i>
+                                {{ article.date_publication|date:"d/m/Y" }}
+                            </span>
+                            {% if article.categories.all %}
+                            <span class="small">
+                                {% for cat in article.categories.all|slice:":1" %}
+                                <span class="badge bg-success">{{ cat.nom }}</span>
+                                {% endfor %}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <h5 class="card-title fw-bold">{{ article.titre }}</h5>
+                        <p class="card-text text-muted small">{{ article.extrait|truncatewords:15 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="far fa-eye me-1"></i> {{ article.nb_vues }}
+                            </small>
+                            <a href="{% url 'actualites:detail' article.slug %}" class="btn btn-outline-success btn-sm">
+                                Lire <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-newspaper text-muted" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3">Aucune actualité disponible</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        {{ num }}
+                    </a>
+                </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}
