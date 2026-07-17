@@ -8,12 +8,14 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ============ SÉCURITÉ ============
-SECRET_KEY = 'django-insecure-temp-key-change-later'
-DEBUG = True  # Met False en production
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-temp-key-change-later')
+DEBUG = True  # Mettre False en production
+
 ALLOWED_HOSTS = [
     'carlosidriss.pythonanywhere.com',
     'localhost',
     '127.0.0.1',
+    '.vercel.app',  # ✅ Nécessaire pour le déploiement Vercel
 ]
 
 # ============ APPLICATIONS ============
@@ -47,11 +49,10 @@ INSTALLED_APPS = [
     'apps.documents',
     'apps.partenaires',
     'apps.contacts',
-    'apps.notifications',  
-    'apps.evenements',     
-    'apps.forums',      
-    'apps.authentification',   # ✅ AJOUTER CETTE LIGNE
-
+    'apps.notifications',
+    'apps.evenements',
+    'apps.forums',
+    'apps.authentification',
 ]
 
 # ============ MIDDLEWARE ============
@@ -75,7 +76,7 @@ WSGI_APPLICATION = 'beta_site.wsgi.application'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # ✅ CORRIGÉ
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -83,7 +84,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'apps.core.context_processors.site_global',  # ✅ AJOUTÉ
+                'apps.core.context_processors.site_global',
             ],
         },
     },
@@ -149,21 +150,44 @@ COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.JSMinFilter']
 # ============ META ============
 META_SITE_NAME = 'BETA-Résilience'
 
-# ============ EMAIL ============
+# ============ EMAIL (CORRIGÉ) ============
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+EMAIL_USE_TLS = False  # ✅ CORRIGÉ: Doit être False quand EMAIL_USE_SSL est True
+EMAIL_USE_SSL = True   # ✅ Le port 465 de Gmail exige SSL
 EMAIL_HOST_USER = 'betaresilienceofficiel1@gmail.com'
 EMAIL_HOST_PASSWORD = 'uvnj mffq oqzw zgkz'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 CONTACT_EMAIL = EMAIL_HOST_USER
 
+# ============ LOGGING (AJOUTÉ POUR FIXER L'ERREUR VERCEL) ============
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '[%(asctime)s] %(levelname)s %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
+
 # ============ URL DU SITE ============
 SITE_URL = 'http://127.0.0.1:8000'
 
-# ============ AUTHENTIFICATION ============
+# ============ REDIRECTIONS AUTHENTIFICATION ============
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/membres/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
