@@ -141,8 +141,8 @@ LOGGING = {
             'style': '{',
         },
         'json': {
-            'format': '{"level":"{levelname}","time":"{asctime}","module":"{module}","message":"{message}"}',
-            'style': '{',
+            'format': '%(levelname)s %(asctime)s %(module)s %(message)s',
+            'style': '%',
         },
     },
     'filters': {
