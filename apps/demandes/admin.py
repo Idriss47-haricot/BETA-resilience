@@ -193,10 +193,13 @@ class DemandeAdmin(admin.ModelAdmin):
         except Exception as e:
             self.message_user(
                 request,
-                f'⚠️ Erreur envoi email : {str(e)}',
+                f'⚠️ Erreur envoi email : {str(e)} | '
+                f'FROM="{settings.DEFAULT_FROM_EMAIL}" | '
+                f'EMAIL_HOST_USER="{settings.EMAIL_HOST_USER}" | '
+                f'TO="{email_destinataire}" | '
+                f'REPLY_TO="{reply_to_list}"',
                 level='ERROR'
             )
-
     # ===== ACTIONS EN MASSE =====
 
     actions = ['exporter_csv', 'marquer_traite', 'marquer_en_cours', 'marquer_rejete', 'envoyer_email_selection']
