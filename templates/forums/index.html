@@ -11,8 +11,8 @@
                     </h1>
                     <div class="d-flex gap-2">
     {% if user.is_staff %}
-    <!-- 🎯 ICI : On utilise la syntaxe officielle Django Admin -->
-    <a href="{% url 'admin:forums_categorieforum_add' %}" class="btn btn-outline-success">
+    <!-- 🎯 Remplacement de l'ancien lien en dur par l'URL dynamique -->
+    <a href="{% url 'admin:forums_forumcategorie_add' %}" class="btn btn-outline-success">
         <i class="fas fa-folder-plus me-2"></i> Créer une catégorie
     </a>
     {% endif %}
