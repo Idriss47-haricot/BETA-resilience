@@ -148,16 +148,6 @@ COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.JSMinFilter']
 # ============ META ============
 META_SITE_NAME = 'BETA-Résilience'
 
-# ============ EMAIL ============
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
-EMAIL_USE_TLS = False  # ✅ Corrigé pour éviter le conflit avec le port 465
-EMAIL_USE_SSL = True   # ✅ Activé (Recommandé pour Gmail sur le port 465)
-EMAIL_HOST_USER = 'betaresilienceofficiel1@gmail.com'
-EMAIL_HOST_PASSWORD = 'uvnj mffq oqzw zgkz'
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-CONTACT_EMAIL = EMAIL_HOST_USER
 
 # ============ URL DU SITE ============
 SITE_URL = 'http://127.0.0.1:8000'
