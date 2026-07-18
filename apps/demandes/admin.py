@@ -191,13 +191,13 @@ class DemandeAdmin(admin.ModelAdmin):
             )
 
         except Exception as e:
+            import os as _os
             self.message_user(
                 request,
                 f'⚠️ Erreur envoi email : {str(e)} | '
-                f'FROM="{settings.DEFAULT_FROM_EMAIL}" | '
-                f'EMAIL_HOST_USER="{settings.EMAIL_HOST_USER}" | '
-                f'TO="{email_destinataire}" | '
-                f'REPLY_TO="{reply_to_list}"',
+                f'OS_ENV_RAW="{_os.environ.get("EMAIL_HOST_USER", "ABSENTE")}" | '
+                f'VERCEL="{_os.environ.get("VERCEL", "ABSENTE")}" | '
+                f'DJANGO_ENV="{_os.environ.get("DJANGO_ENV", "ABSENTE")}"',
                 level='ERROR'
             )
     # ===== ACTIONS EN MASSE =====
