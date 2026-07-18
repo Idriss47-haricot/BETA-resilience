@@ -1,4 +1,4 @@
-Import os
+import os  # ✅ Corrigé (minuscule)
 from pathlib import Path
 from dotenv import load_dotenv
 from django.urls import reverse_lazy
@@ -50,8 +50,7 @@ INSTALLED_APPS = [
     'apps.notifications',  
     'apps.evenements',     
     'apps.forums',      
-    'apps.authentification',   # ✅ AJOUTER CETTE LIGNE
-
+    'apps.authentification',
 ]
 
 # ============ MIDDLEWARE ============
@@ -75,7 +74,7 @@ WSGI_APPLICATION = 'beta_site.wsgi.application'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # ✅ CORRIGÉ
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -83,7 +82,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'apps.core.context_processors.site_global',  # ✅ AJOUTÉ
+                'apps.core.context_processors.site_global',
             ],
         },
     },
@@ -153,8 +152,8 @@ META_SITE_NAME = 'BETA-Résilience'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+EMAIL_USE_TLS = False  # ✅ Corrigé pour éviter le conflit avec le port 465
+EMAIL_USE_SSL = True   # ✅ Activé (Recommandé pour Gmail sur le port 465)
 EMAIL_HOST_USER = 'betaresilienceofficiel1@gmail.com'
 EMAIL_HOST_PASSWORD = 'uvnj mffq oqzw zgkz'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
