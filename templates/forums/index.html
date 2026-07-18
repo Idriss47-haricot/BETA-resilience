@@ -11,10 +11,12 @@
                     </h1>
                     <div class="d-flex gap-2">
                         {% if user.is_staff %}
-                        <a href="/admin/forums/forumcategorie/add/" class="btn btn-outline-success">
+                        <!-- 🎯 ICI : On utilise la syntaxe officielle Django Admin -->
+                        <a href="{% url 'admin:forums_categorieforum_add' %}" class="btn btn-outline-success">
                             <i class="fas fa-folder-plus me-2"></i> Créer une catégorie
                         </a>
                         {% endif %}
+                    
                         {% if user.is_authenticated and categories %}
                         <a href="{% url 'forums:creer_sujet' categories.0.slug %}" class="btn btn-success">
                             <i class="fas fa-plus me-2"></i> Nouveau sujet
