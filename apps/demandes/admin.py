@@ -149,6 +149,14 @@ class DemandeAdmin(admin.ModelAdmin):
                 fail_silently=False,
             )
 
+            if not demande.email:
+                self.message_user(
+                    request,
+                    f'⚠️ Impossible d\'envoyer l\'email : aucune adresse renseignée pour la demande de {demande}',
+                    level='WARNING'
+                )
+                return
+
             email = EmailMessage(
                 sujet,
                 message_html,
