@@ -1,5 +1,11 @@
 from django.contrib import admin
 from .models import ForumCategorie, ForumSujet, ForumMessage
+from .models import CategorieForum
+
+@admin.register(CategorieForum)
+class CategorieForumAdmin(admin.ModelAdmin):
+    list_display = ('titre', 'slug') # Remplace par tes champs réels
+    prepopulated_fields = {'slug': ('titre',)}
 
 @admin.register(ForumCategorie)
 class ForumCategorieAdmin(admin.ModelAdmin):
