@@ -8,6 +8,8 @@ from django.core.mail import get_connection, EmailMessage
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.conf import settings
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 from apps.core.admin import admin_site
 from apps.demandes.models import Demande
 import csv
@@ -119,6 +121,29 @@ class DemandeAdmin(admin.ModelAdmin):
         if demande.statut not in statuts_avec_email:
             return
 
+        # Validation de l'adresse email du demandeur AVANT toute tentative d'envoi
+        email_destinataire = (demande.email or '').strip()
+        if not email_destinataire:
+            self.message_user(
+                request,
+                f'⚠️ Impossible d\'envoyer l\'email : aucune adresse renseignée pour la demande de {demande}',
+                level='WARNING'
+            )
+            return
+        try:
+            validate_email(email_destinataire)
+        except ValidationError:
+            self.message_user(
+                request,
+                f'⚠️ Impossible d\'envoyer l\'email : adresse invalide ("{email_destinataire}") pour la demande de {demande}',
+                level='WARNING'
+            )
+            return
+
+        # Validation de l'adresse de réponse (CONTACT_EMAIL), pour éviter un autre "Invalid address"
+        reply_to_email = (getattr(settings, 'CONTACT_EMAIL', '') or '').strip()
+        reply_to_list = [reply_to_email] if reply_to_email else []
+
         try:
             if demande.statut == 'traite':
                 sujet = f'✅ Votre demande a été validée - {demande.get_entite_display()}'
@@ -153,8 +178,8 @@ class DemandeAdmin(admin.ModelAdmin):
                 sujet,
                 message_html,
                 settings.DEFAULT_FROM_EMAIL,
-                [demande.email],
-                reply_to=[settings.CONTACT_EMAIL],
+                [email_destinataire],
+                reply_to=reply_to_list,
                 connection=connection,
             )
             email.content_subtype = 'html'
@@ -162,7 +187,7 @@ class DemandeAdmin(admin.ModelAdmin):
 
             self.message_user(
                 request,
-                f'✅ Email envoyé à {demande.email}'
+                f'✅ Email envoyé à {email_destinataire}'
             )
 
         except Exception as e:

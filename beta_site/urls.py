@@ -60,6 +60,8 @@ urlpatterns = [
     path('partenaires/', include('apps.partenaires.urls')),
     path('contact/', include('apps.contacts.urls')),
     path('demandes/', include('apps.demandes.urls')),
+    path('admin/', admin.site.urls),
+    path('', views.liste_categories, name='liste_categories'),
 
     # ----- Authentification (UNE SEULE fois) -----
     path('login/', MembreLoginView.as_view(template_name='registration/login.html'), name='login'),
