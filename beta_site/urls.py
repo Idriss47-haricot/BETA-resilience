@@ -77,6 +77,8 @@ urlpatterns = [
 
     path('auth-2fa/', include('apps.authentification.urls')),
     path('evenements/', include('apps.evenements.urls', namespace='evenements')),
+
+    path('register/', TemplateView.as_view(template_name='authentification/register.html'), name='register_prive'),
     
     
 
