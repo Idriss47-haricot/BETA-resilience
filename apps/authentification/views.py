@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
+from django.contrib.auth.models import User
 from django.contrib import messages
 from apps.membres.models import Membre
 
@@ -11,19 +12,11 @@ def configurer(request):
 def inscription_privee(request):
     token = request.GET.get('token') or request.POST.get('token')
 
-    membre = None
-    if token:
-        membre = Membre.objects.filter(token_activation=token).first()
+    membre = Membre.objects.filter(token_activation=token).first() if token else None
 
     if not membre or not membre.verifier_token_activation(token):
-        debug_info = (
-            f"[DEBUG] token reçu=\"{token}\" | "
-            f"membre trouvé={'Oui' if membre else 'Non'} | "
-            f"token_activation en base={membre.token_activation if membre else 'N/A'} | "
-            f"token_expiration={membre.token_expiration if membre else 'N/A'}"
-        )
         return render(request, 'authentification/register.html', {
-            'error': f"Ce lien d'inscription est invalide ou a expiré. Contactez un administrateur. {debug_info}"
+            'error': "Ce lien d'inscription est invalide ou a expiré. Contactez un administrateur."
         })
 
     if request.method == 'POST':
@@ -36,15 +29,24 @@ def inscription_privee(request):
                 'error': "Tous les champs sont obligatoires."
             })
 
-        user = membre.user
-        user.username = username
-        user.email = email
-        user.set_password(password)
-        user.save()
+        if User.objects.filter(username=username).exclude(pk=membre.user_id).exists():
+            return render(request, 'authentification/register.html', {
+                'error': "Ce nom d'utilisateur est déjà pris."
+            })
+
+        if membre.user:
+            user = membre.user
+            user.username = username
+            user.email = email
+            user.set_password(password)
+            user.save()
+        else:
+            user = User.objects.create_user(username=username, email=email, password=password)
+            membre.user = user
 
         membre.est_compte_active = True
         membre.token_activation = ''
-        membre.save(update_fields=['est_compte_active', 'token_activation'])
+        membre.save()
 
         login(request, user)
         messages.success(request, f"Bienvenue {username} ! Votre compte est activé.")
