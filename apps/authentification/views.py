@@ -16,8 +16,14 @@ def inscription_privee(request):
         membre = Membre.objects.filter(token_activation=token).first()
 
     if not membre or not membre.verifier_token_activation(token):
+        debug_info = (
+            f"[DEBUG] token reçu=\"{token}\" | "
+            f"membre trouvé={'Oui' if membre else 'Non'} | "
+            f"token_activation en base={membre.token_activation if membre else 'N/A'} | "
+            f"token_expiration={membre.token_expiration if membre else 'N/A'}"
+        )
         return render(request, 'authentification/register.html', {
-            'error': "Ce lien d'inscription est invalide ou a expiré. Contactez un administrateur."
+            'error': f"Ce lien d'inscription est invalide ou a expiré. Contactez un administrateur. {debug_info}"
         })
 
     if request.method == 'POST':
