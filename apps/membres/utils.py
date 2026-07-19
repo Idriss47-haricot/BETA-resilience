@@ -49,7 +49,7 @@ def envoyer_invitation(demande, request=None):
         if not membre.token_activation:
             membre.generer_token_activation()
         
-        lien_activation = f"{settings.SITE_URL}/activer-compte/?token={membre.token_activation}"
+        lien_activation = f"{settings.SITE_URL}/membres/activer-compte/?token={membre.token_activation}"
         
         context = {
             'demande': demande,
