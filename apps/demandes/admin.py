@@ -13,6 +13,7 @@ from django.core.exceptions import ValidationError
 from apps.core.admin import admin_site
 from apps.demandes.models import Demande
 import csv
+from apps.membres.models import Membre
 
 
 @admin.register(Demande, site=admin_site)
@@ -121,7 +122,6 @@ class DemandeAdmin(admin.ModelAdmin):
         if demande.statut not in statuts_avec_email:
             return
 
-        # Validation de l'adresse email du demandeur AVANT toute tentative d'envoi
         email_destinataire = (demande.email or '').strip()
         if not email_destinataire:
             self.message_user(
@@ -140,29 +140,49 @@ class DemandeAdmin(admin.ModelAdmin):
             )
             return
 
-        # Validation de l'adresse de réponse (CONTACT_EMAIL), pour éviter un autre "Invalid address"
-        reply_to_email = (getattr(settings, 'CONTACT_EMAIL', '') or '').strip()
-        reply_to_list = [reply_to_email] if reply_to_email else []
+        # ===== CAS SPÉCIAL : demande d'adhésion acceptée → créer le Membre + inviter =====
+        if demande.statut == 'traite' and demande.type_demande == 'adhesion':
+            membre, cree = Membre.objects.get_or_create(
+                email=email_destinataire,
+                defaults={
+                    'nom': demande.nom,
+                    'prenom': demande.prenom,
+                    'telephone': demande.telephone,
+                }
+            )
+            membre.generer_token_activation()
 
-        try:
+            lien_activation = f"{settings.SITE_URL}/auth-2fa/inscription-privee/?token={membre.token_activation}"
+
+            context = {
+                'demande': demande,
+                'membre': membre,
+                'lien_activation': lien_activation,
+                'site_name': 'BETA-Résilience',
+                'site_url': settings.SITE_URL,
+                'expiration_heures': 48,
+            }
+            message_html = render_to_string('membres/email_invitation.html', context)
+            sujet = '🎉 Félicitations ! Votre adhésion à BETA-Résilience est acceptée'
+        else:
+            reply_to_email = (getattr(settings, 'CONTACT_EMAIL', '') or '').strip()
             if demande.statut == 'traite':
                 sujet = f'✅ Votre demande a été validée - {demande.get_entite_display()}'
             else:
                 sujet = f'❌ Votre demande a été refusée - {demande.get_entite_display()}'
-
             context = {
                 'demande': demande,
                 'site_name': 'BETA-Résilience',
-                'site_url': 'http://127.0.0.1:8000',
+                'site_url': settings.SITE_URL,
                 'admin_comment': demande.commentaire_admin or '',
                 'old_statut': old_statut,
             }
+            message_html = render_to_string('demandes/email_changement_statut.html', context)
 
-            message_html = render_to_string(
-                'demandes/email_changement_statut.html', context
-            )
+        reply_to_email = (getattr(settings, 'CONTACT_EMAIL', '') or '').strip()
+        reply_to_list = [reply_to_email] if reply_to_email else []
 
-            # Nouvelle connexion forcée à chaque envoi sur port 465
+        try:
             connection = get_connection(
                 backend='django.core.mail.backends.smtp.EmailBackend',
                 host='smtp.gmail.com',
@@ -185,19 +205,12 @@ class DemandeAdmin(admin.ModelAdmin):
             email.content_subtype = 'html'
             email.send(fail_silently=False)
 
-            self.message_user(
-                request,
-                f'✅ Email envoyé à {email_destinataire}'
-            )
+            self.message_user(request, f'✅ Email envoyé à {email_destinataire}')
 
         except Exception as e:
-            import os as _os
             self.message_user(
                 request,
-                f'⚠️ Erreur envoi email : {str(e)} | '
-                f'OS_ENV_RAW="{_os.environ.get("EMAIL_HOST_USER", "ABSENTE")}" | '
-                f'VERCEL="{_os.environ.get("VERCEL", "ABSENTE")}" | '
-                f'DJANGO_ENV="{_os.environ.get("DJANGO_ENV", "ABSENTE")}"',
+                f'⚠️ Erreur envoi email : {str(e)}',
                 level='ERROR'
             )
     # ===== ACTIONS EN MASSE =====
