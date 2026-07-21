@@ -205,7 +205,8 @@ class DemandeAdmin(admin.ModelAdmin):
             email.content_subtype = 'html'
             email.send(fail_silently=False)
 
-            self.message_user(request, f'✅ Email envoyé à {email_destinataire}')
+            template_utilise = 'INVITATION (avec token)' if (demande.statut == 'traite' and demande.type_demande == 'adhesion') else 'GENERIQUE (sans token)'
+            self.message_user(request, f'✅ Email envoyé à {email_destinataire} — Template: {template_utilise}')
 
         except Exception as e:
             self.message_user(
