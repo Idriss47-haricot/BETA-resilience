@@ -141,26 +141,14 @@ class DemandeAdmin(admin.ModelAdmin):
             return
 
         # ===== CAS SPÉCIAL : demande d'adhésion acceptée → créer le Membre + inviter =====
-        if demande.statut == 'traite' and demande.type_demande == 'adhesion':
-            membre, cree = Membre.objects.get_or_create(
-                email=email_destinataire,
-                defaults={
-                    'nom': demande.nom,
-                    'prenom': demande.prenom,
-                    'telephone': demande.telephone,
-                }
-            )
-            membre.generer_token_activation()
-
-            lien_activation = f"{settings.SITE_URL}/auth-2fa/inscription-privee/?token={membre.token_activation}"
+       if demande.statut == 'traite' and demande.type_demande == 'adhesion':
+            lien_activation = f"{settings.SITE_URL}/auth-2fa/inscription-privee/"
 
             context = {
                 'demande': demande,
-                'membre': membre,
                 'lien_activation': lien_activation,
                 'site_name': 'BETA-Résilience',
                 'site_url': settings.SITE_URL,
-                'expiration_heures': 48,
             }
             message_html = render_to_string('membres/email_invitation.html', context)
             sujet = '🎉 Félicitations ! Votre adhésion à BETA-Résilience est acceptée'
