@@ -10,27 +10,6 @@ def configurer(request):
 
 
 def inscription_privee(request):
-    token = request.GET.get('token') or request.POST.get('token')
-
-    membre = Membre.objects.filter(token_activation=token).first() if token else None
-
-    if not membre or not membre.verifier_token_activation(token):
-        from django.utils import timezone
-        debug = (
-            f" [DEBUG] token_url=\"{token}\" | "
-            f"membre_trouve={'Oui' if membre else 'Non'} | "
-        )
-        if membre:
-            debug += (
-                f"token_en_base=\"{membre.token_activation}\" | "
-                f"expiration={membre.token_expiration} | "
-                f"maintenant={timezone.now()} | "
-                f"expire={'Oui' if membre.token_expiration and timezone.now() > membre.token_expiration else 'Non'}"
-            )
-        return render(request, 'authentification/register.html', {
-            'error': f"Ce lien d'inscription est invalide ou a expiré. Contactez un administrateur.{debug}"
-        })
-
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         email = request.POST.get('email', '').strip()
@@ -41,10 +20,15 @@ def inscription_privee(request):
                 'error': "Tous les champs sont obligatoires."
             })
 
-        if User.objects.filter(username=username).exclude(pk=membre.user_id).exists():
+        if User.objects.filter(username=username).exists():
             return render(request, 'authentification/register.html', {
                 'error': "Ce nom d'utilisateur est déjà pris."
             })
+
+        membre, cree = Membre.objects.get_or_create(
+            email=email,
+            defaults={'nom': '', 'prenom': ''}
+        )
 
         if membre.user:
             user = membre.user
@@ -57,7 +41,6 @@ def inscription_privee(request):
             membre.user = user
 
         membre.est_compte_active = True
-        membre.token_activation = ''
         membre.save()
 
         login(request, user)
