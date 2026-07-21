@@ -15,8 +15,20 @@ def inscription_privee(request):
     membre = Membre.objects.filter(token_activation=token).first() if token else None
 
     if not membre or not membre.verifier_token_activation(token):
+        from django.utils import timezone
+        debug = (
+            f" [DEBUG] token_url=\"{token}\" | "
+            f"membre_trouve={'Oui' if membre else 'Non'} | "
+        )
+        if membre:
+            debug += (
+                f"token_en_base=\"{membre.token_activation}\" | "
+                f"expiration={membre.token_expiration} | "
+                f"maintenant={timezone.now()} | "
+                f"expire={'Oui' if membre.token_expiration and timezone.now() > membre.token_expiration else 'Non'}"
+            )
         return render(request, 'authentification/register.html', {
-            'error': "Ce lien d'inscription est invalide ou a expiré. Contactez un administrateur."
+            'error': f"Ce lien d'inscription est invalide ou a expiré. Contactez un administrateur.{debug}"
         })
 
     if request.method == 'POST':
