@@ -43,7 +43,7 @@ def inscription_privee(request):
         membre.est_compte_active = True
         membre.save()
 
-        login(request, user)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         messages.success(request, f"Bienvenue {username} ! Votre compte est activé.")
         return redirect('membres:dashboard')
 
