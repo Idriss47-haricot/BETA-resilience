@@ -141,7 +141,7 @@ class DemandeAdmin(admin.ModelAdmin):
             return
 
         # ===== CAS SPÉCIAL : demande d'adhésion acceptée → créer le Membre + inviter =====
-       if demande.statut == 'traite' and demande.type_demande == 'adhesion':
+        if demande.statut == 'traite' and demande.type_demande == 'adhesion':
             lien_activation = f"{settings.SITE_URL}/auth-2fa/inscription-privee/"
 
             context = {
