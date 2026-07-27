@@ -9,6 +9,9 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # ← 3 niveaux car settings/base.py
 
+RECAPTCHA_SITE_KEY = os.getenv('RECAPTCHA_SITE_KEY', '')
+RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY', '')
+
 SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000')
 
 # Ajoute le dossier racine du projet au PYTHONPATH
