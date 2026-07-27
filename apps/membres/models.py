@@ -31,6 +31,24 @@ class Membre(models.Model):
     """
     Membre de BETA-Résilience
     """
+
+    ENTITE_CHOICES = [
+        ('association', 'BETA-Résilience Association'),
+        ('bureau_etude', 'BETA-Résilience Bureau d\'étude'),
+        ('invest', 'BETA-Résilience INVEST'),
+        ('laboratoire', 'Laboratoire Résilience'),
+    ]
+
+    entite = models.CharField(
+        'Entité',
+        max_length=20,
+        choices=ENTITE_CHOICES,
+        default='association',
+    )
+
+    # Informations personnelles
+    nom = models.CharField('Nom', max_length=100)
+    
     # Informations personnelles
     nom = models.CharField('Nom', max_length=100)
     prenom = models.CharField('Prénom', max_length=100)
