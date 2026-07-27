@@ -64,4 +64,7 @@ def site_global(request):
     from datetime import datetime
     context['current_year'] = datetime.now().year
     
+    # Clé publique reCAPTCHA pour les formulaires
+    context['recaptcha_site_key'] = settings.RECAPTCHA_SITE_KEY
+    
     return context
