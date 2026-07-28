@@ -12,8 +12,8 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from apps.core.admin import admin_site
 from apps.demandes.models import Demande
-import csv
 from apps.membres.models import Membre
+import csv
 
 
 @admin.register(Demande, site=admin_site)
@@ -140,12 +140,26 @@ class DemandeAdmin(admin.ModelAdmin):
             )
             return
 
-        # ===== CAS SPÉCIAL : demande d'adhésion acceptée → créer le Membre + inviter =====
+        # ===== CAS SPÉCIAL : demande d'adhésion acceptée → créer/mettre à jour le Membre =====
         if demande.statut == 'traite' and demande.type_demande == 'adhesion':
+            membre, cree = Membre.objects.get_or_create(
+                email=email_destinataire,
+                defaults={
+                    'nom': demande.nom,
+                    'prenom': demande.prenom,
+                    'telephone': demande.telephone,
+                    'entite': demande.entite,
+                }
+            )
+            if not cree and membre.entite != demande.entite:
+                membre.entite = demande.entite
+                membre.save(update_fields=['entite'])
+
             lien_activation = f"{settings.SITE_URL}/auth-2fa/inscription-privee/"
 
             context = {
                 'demande': demande,
+                'membre': membre,
                 'lien_activation': lien_activation,
                 'site_name': 'BETA-Résilience',
                 'site_url': settings.SITE_URL,
@@ -153,7 +167,6 @@ class DemandeAdmin(admin.ModelAdmin):
             message_html = render_to_string('membres/email_invitation.html', context)
             sujet = '🎉 Félicitations ! Votre adhésion à BETA-Résilience est acceptée'
         else:
-            reply_to_email = (getattr(settings, 'CONTACT_EMAIL', '') or '').strip()
             if demande.statut == 'traite':
                 sujet = f'✅ Votre demande a été validée - {demande.get_entite_display()}'
             else:
@@ -194,13 +207,14 @@ class DemandeAdmin(admin.ModelAdmin):
             email.send(fail_silently=False)
 
             self.message_user(request, f'✅ Email envoyé à {email_destinataire}')
-            
+
         except Exception as e:
             self.message_user(
                 request,
                 f'⚠️ Erreur envoi email : {str(e)}',
                 level='ERROR'
             )
+
     # ===== ACTIONS EN MASSE =====
 
     actions = ['exporter_csv', 'marquer_traite', 'marquer_en_cours', 'marquer_rejete', 'envoyer_email_selection']
