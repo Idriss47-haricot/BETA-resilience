@@ -1,6 +1,13 @@
 """
 Administration de l'application Membres - Version avec envoi d'identifiants
 """
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from io import BytesIO
+
 from django.contrib import admin
 from django.utils.html import format_html
 from django.http import HttpResponse
