@@ -38,6 +38,7 @@ class MembreAdmin(admin.ModelAdmin):
     list_display = (
         'get_photo_preview',
         'nom_complet',
+        'entite',
         'fonction',
         'est_membre_bureau',
         'est_actif',
@@ -45,7 +46,7 @@ class MembreAdmin(admin.ModelAdmin):
         'date_validation',
         'get_token_status'
     )
-    list_filter = ('est_actif', 'est_membre_bureau', 'est_compte_active', 'date_validation')
+    list_filter = ('entite', 'est_actif', 'est_membre_bureau', 'est_compte_active', 'date_validation')
     search_fields = ('nom', 'prenom', 'email', 'telephone', 'biographie')
     prepopulated_fields = {'slug': ('prenom', 'nom')}
     ordering = ('-est_membre_bureau', 'fonction__ordre', 'nom')
@@ -55,7 +56,7 @@ class MembreAdmin(admin.ModelAdmin):
         'fields': ('user',)
         }),
         ('👤 Informations personnelles', {
-            'fields': ('nom', 'prenom', 'photo', 'fonction', 'statut', 'biographie')
+            'fields': ('entite', 'nom', 'prenom', 'photo', 'fonction', 'statut', 'biographie')
         }),
         ('📞 Contact', {
             'fields': ('email', 'telephone')
@@ -86,6 +87,55 @@ class MembreAdmin(admin.ModelAdmin):
         'date_invitation',
         'date_validation'
     )
+
+    actions = ['exporter_pdf_par_entite']
+
+    def exporter_pdf_par_entite(self, request, queryset):
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=2*cm, bottomMargin=2*cm)
+        styles = getSampleStyleSheet()
+        elements = []
+
+        entites_presentes = queryset.values_list('entite', flat=True).distinct()
+
+        for entite_code in entites_presentes:
+            entite_label = dict(Membre.ENTITE_CHOICES).get(entite_code, entite_code)
+            membres_entite = queryset.filter(entite=entite_code).order_by('nom', 'prenom')
+
+            elements.append(Paragraph(f"État des membres — {entite_label}", styles['Heading1']))
+            elements.append(Spacer(1, 0.5*cm))
+
+            data = [['Nom', 'Prénom', 'Email', 'Téléphone', 'Date d\'adhésion']]
+            for m in membres_entite:
+                data.append([
+                    m.nom,
+                    m.prenom,
+                    m.email,
+                    m.telephone or '-',
+                    m.date_adhesion.strftime('%d/%m/%Y') if m.date_adhesion else '-',
+                ])
+
+            table = Table(data, colWidths=[3.2*cm, 3.2*cm, 5*cm, 3*cm, 3*cm])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1E7A3D')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#E8F3EA')]),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ]))
+            elements.append(table)
+            elements.append(Spacer(1, 1*cm))
+
+        doc.build(elements)
+        buffer.seek(0)
+
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="membres_beta_resilience.pdf"'
+        return response
+    exporter_pdf_par_entite.short_description = '📄 Exporter en PDF (par entité)'
     
     def get_photo_preview(self, obj):
         """Afficher un aperçu de la photo"""
