@@ -1,0 +1,12 @@
+/* Style pour les champs de date dans l'admin */
+.vDateTimeField {
+    width: 250px !important;
+}
+
+/* Améliorer l'affichage des widgets datetime-local */
+input[type="datetime-local"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}

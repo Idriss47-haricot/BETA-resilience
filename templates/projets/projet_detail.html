@@ -1,0 +1,113 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ projet.titre }} - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'core:accueil' %}">Accueil</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'projets:list' %}">Projets</a></li>
+                        <li class="breadcrumb-item active">{{ projet.titre }}</li>
+                    </ol>
+                </nav>
+                
+                <div class="card border-0 shadow-sm" data-aos="fade-up">
+                    {% if projet.image_principale %}
+                    <img src="{{ projet.image_principale.url }}" class="card-img-top" alt="{{ projet.titre }}" style="max-height: 400px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h1 class="display-6 fw-bold text-success">{{ projet.titre }}</h1>
+                            <span class="badge {% if projet.statut == 'en_cours' %}bg-success{% elif projet.statut == 'boucle' %}bg-secondary{% else %}bg-warning{% endif %} fs-6">
+                                {{ projet.get_statut_display }}
+                            </span>
+                        </div>
+                        
+                        <div class="project-meta mb-4">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">
+                                        <i class="far fa-calendar-alt text-success me-1"></i>
+                                        Début : {{ projet.date_debut|date:"d/m/Y" }}
+                                    </small>
+                                </div>
+                                {% if projet.date_fin %}
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">
+                                        <i class="far fa-calendar-check text-success me-1"></i>
+                                        Fin : {{ projet.date_fin|date:"d/m/Y" }}
+                                    </small>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-clock text-success me-1"></i>
+                                        Durée : {{ projet.duree_mois }} mois
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="project-content">
+                            {{ projet.description_longue|linebreaks }}
+                        </div>
+                        
+                        {% if projet.categories.all %}
+                        <div class="project-categories mt-3">
+                            <strong class="text-success">Catégories :</strong>
+                            {% for cat in projet.categories.all %}
+                            <span class="badge bg-light text-dark me-1">{{ cat.nom }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if projet.partenaires.all %}
+                        <div class="project-partenaires mt-3">
+                            <strong class="text-success">Partenaires :</strong>
+                            {% for partenaire in projet.partenaires.all %}
+                            <span class="badge bg-success me-1">{{ partenaire.nom }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if projet.lien_externe %}
+                        <a href="{{ projet.lien_externe }}" class="btn btn-outline-success mt-3" target="_blank">
+                            <i class="fas fa-external-link-alt me-2"></i> Voir le projet en ligne
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Projets similaires -->
+                {% if projets_similaires %}
+                <div class="mt-5" data-aos="fade-up">
+                    <h3 class="text-success">Projets similaires</h3>
+                    <div class="row g-3 mt-2">
+                        {% for similaire in projets_similaires %}
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="fw-bold">{{ similaire.titre }}</h6>
+                                    <p class="text-muted small">{{ similaire.description_courte|truncatewords:10 }}</p>
+                                    <a href="{% url 'projets:detail' similaire.slug %}" class="btn btn-outline-success btn-sm">
+                                        Voir <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

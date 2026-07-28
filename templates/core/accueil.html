@@ -1,0 +1,650 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}BETA-Résilience - Accueil{% endblock %}
+
+{% block content %}
+
+<!-- ===== BANDEAU HERO ===== -->
+<section class="hero-section position-relative" style="background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #4CAF50 100%); min-height: 450px; display: flex; align-items: center;">
+    <div class="container text-white py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                {% if user.is_authenticated %}
+                    <!-- ✅ BANDEAU PERSONNALISÉ POUR MEMBRES CONNECTÉS -->
+                    <h1 class="display-4 fw-bold mb-3">
+                        🌿 Bonjour {{ user.get_full_name|default:user.username }} !
+                    </h1>
+                    <h2 class="h4 fw-light mb-3">
+                        Bienvenue dans votre espace BETA-Résilience
+                    </h2>
+                    <div class="row g-2 mt-3">
+                        <div class="col-md-4">
+                            <div class="stat-card bg-white bg-opacity-10 rounded-3 p-3 text-center">
+                                <span class="display-6 fw-bold">{{ demandes|length }}</span>
+                                <p class="mb-0 small">Mes demandes</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card bg-white bg-opacity-10 rounded-3 p-3 text-center">
+                                <span class="display-6 fw-bold">{{ inscriptions|default:0 }}</span>
+                                <p class="mb-0 small">Événements</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card bg-white bg-opacity-10 rounded-3 p-3 text-center">
+                                <span class="display-6 fw-bold">{{ notifications_non_lues|default:0 }}</span>
+                                <p class="mb-0 small">Notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-3 mt-4">
+                        <a href="{% url 'membres:dashboard' %}" class="btn btn-light btn-lg">
+                            <i class="fas fa-tachometer-alt me-2"></i> Tableau de bord
+                        </a>
+                        <a href="{% url 'membres:mes-demandes' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-file-alt me-2"></i> Mes demandes
+                        </a>
+                    </div>
+                {% else %}
+                    <!-- BANDEAU POUR VISITEURS NON CONNECTÉS -->
+                    <h1 class="display-4 fw-bold mb-3">
+                        BETA-Résilience
+                    </h1>
+                    <h2 class="h4 fw-light mb-3">
+                        Expertise en résilience socio-environnementale
+                    </h2>
+                    <p class="lead mb-4">
+                        Solutions innovantes pour les défis du développement durable au Cameroun et en Afrique.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="{% url 'core:a_propos' %}" class="btn btn-light btn-lg">
+                            <i class="fas fa-info-circle"></i> En savoir plus
+                        </a>
+                        <a href="{% url 'contacts:contact' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-envelope"></i> Nous contacter
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-lg-4 text-center d-none d-lg-block">
+                <i class="fas fa-seedling" style="font-size: 8rem; color: rgba(255,255,255,0.3);"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== CONTENU POUR MEMBRES CONNECTÉS ===== -->
+{% if user.is_authenticated %}
+
+    <!-- ===== MES DEMANDES RÉCENTES ===== -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 text-success">
+                                <i class="fas fa-file-alt me-2"></i> Mes dernières demandes
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if demandes %}
+                                {% for demande in demandes|slice:":3" %}
+                                <div class="demande-item p-3 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge {% if demande.statut == 'traite' %}bg-success{% elif demande.statut == 'en_cours' %}bg-warning{% elif demande.statut == 'rejete' %}bg-danger{% else %}bg-secondary{% endif %} mb-1">
+                                                {{ demande.get_statut_display }}
+                                            </span>
+                                            <p class="mb-0 fw-bold">{{ demande.objet|truncatechars:40 }}</p>
+                                            <small class="text-muted">{{ demande.get_entite_display }} · {{ demande.date_soumission|date:"d/m/Y" }}</small>
+                                        </div>
+                                        <a href="#" class="btn btn-sm btn-outline-success">Voir</a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-inbox text-muted" style="font-size: 2rem;"></i>
+                                    <p class="text-muted mt-2">Aucune demande</p>
+                                </div>
+                            {% endif %}
+                            <div class="mt-3">
+                                <a href="{% url 'membres:mes-demandes' %}" class="btn btn-outline-success btn-sm">
+                                    Voir toutes mes demandes <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                                <a href="{% url 'demandes:soumettre' %}" class="btn btn-success btn-sm ms-2">
+                                    <i class="fas fa-plus me-1"></i> Nouvelle demande
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ===== MES ÉVÉNEMENTS À VENIR ===== -->
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 text-success">
+                                <i class="fas fa-calendar-alt me-2"></i> Mes événements à venir
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if inscriptions %}
+                                {% for inscription in inscriptions|slice:":3" %}
+                                <div class="evenement-item p-3 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge bg-primary mb-1">{{ inscription.evenement.type_evenement }}</span>
+                                            <p class="mb-0 fw-bold">{{ inscription.evenement.titre|truncatechars:35 }}</p>
+                                            <small class="text-muted">
+                                                <i class="far fa-calendar-alt me-1"></i>
+                                                {{ inscription.evenement.date_debut|date:"d/m/Y H:i" }}
+                                                · {{ inscription.evenement.lieu|truncatechars:20 }}
+                                            </small>
+                                        </div>
+                                        <a href="{% url 'evenements:detail' inscription.evenement.slug %}" class="btn btn-sm btn-outline-success">Voir</a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-calendar-times text-muted" style="font-size: 2rem;"></i>
+                                    <p class="text-muted mt-2">Aucun événement à venir</p>
+                                </div>
+                            {% endif %}
+                            <div class="mt-3">
+                                <a href="{% url 'evenements:liste' %}" class="btn btn-outline-success btn-sm">
+                                    Voir tous les événements <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                                <a href="{% url 'evenements:mes_evenements' %}" class="btn btn-outline-secondary btn-sm ms-2">
+                                    <i class="fas fa-calendar-check me-1"></i> Mes événements
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== NOTIFICATIONS + RACCORCIS RAPIDES ===== -->
+    <section class="py-4" style="background: #f8f9fa;">
+        <div class="container">
+            <div class="row">
+                <!-- Notifications -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-success">
+                                <i class="fas fa-bell me-2"></i> Notifications
+                                {% if notifications_non_lues > 0 %}
+                                <span class="badge bg-danger ms-2">{{ notifications_non_lues }}</span>
+                                {% endif %}
+                            </h5>
+                            <a href="{% url 'notifications:liste' %}" class="btn btn-sm btn-outline-secondary">
+                                Voir toutes
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if notifications %}
+                                {% for notification in notifications|slice:":3" %}
+                                <div class="notification-item p-3 border-bottom {% if not notification.est_lue %}bg-light{% endif %}">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3" style="font-size: 1.2rem; color: {{ notification.get_couleur }};">
+                                            <i class="fas {{ notification.get_icone }}"></i>
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 fw-bold {% if not notification.est_lue %}text-success{% endif %}">
+                                                {{ notification.titre }}
+                                            </p>
+                                            <p class="mb-0 small text-muted">{{ notification.message|truncatechars:80 }}</p>
+                                            <small class="text-muted">{{ notification.date_creation|timesince }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-3">
+                                    <i class="fas fa-bell-slash text-muted" style="font-size: 2rem;"></i>
+                                    <p class="text-muted mt-2">Aucune notification</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Raccourcis rapides -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 text-success">
+                                <i class="fas fa-bolt me-2"></i> Accès rapide
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'demandes:soumettre' %}" class="btn btn-success btn-lg text-start">
+                                    <i class="fas fa-plus-circle me-2"></i> Nouvelle demande
+                                </a>
+                                <a href="{% url 'evenements:liste' %}" class="btn btn-outline-success btn-lg text-start">
+                                    <i class="fas fa-calendar-plus me-2"></i> Événements
+                                </a>
+                                <a href="{% url 'forums:index' %}" class="btn btn-outline-success btn-lg text-start">
+                                    <i class="fas fa-comments me-2"></i> Forums
+                                </a>
+                                <a href="{% url 'membres:profil' %}" class="btn btn-outline-secondary btn-lg text-start">
+                                    <i class="fas fa-user-edit me-2"></i> Mon profil
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== APPEL À L'ACTION ===== -->
+    <section class="cta-section py-5" style="background: linear-gradient(135deg, #1B5E20, #2E7D32);">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8 text-white">
+                    <h3 class="fw-bold">📊 Explorez votre tableau de bord</h3>
+                    <p class="mb-0">Accédez à toutes vos informations et gérez votre espace membre.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <a href="{% url 'membres:dashboard' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-tachometer-alt"></i> Tableau de bord
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+<!-- ===== CONTENU POUR VISITEURS NON CONNECTÉS ===== -->
+{% else %}
+
+    <!-- ===== NOS ENTITÉS (Visible uniquement pour les non-connectés) ===== -->
+    <section class="entites-section py-5">
+        <div class="container">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h2 class="section-title text-success fw-bold">Nos Entités</h2>
+                <p class="text-muted">Soumettez votre demande à l'entité de votre choix</p>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Entité 1 : Association -->
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card entite-card h-100 border-0 shadow-sm p-3 text-center" style="border-top: 4px solid #2E7D32;">
+                        <div class="entite-icon mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; background: #2E7D3220; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #2E7D32;">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h5 class="fw-bold">BETA-Résilience Association</h5>
+                        <span class="badge mb-2" style="background: #2E7D32; color: white;">Association</span>
+                        <p class="text-muted small">Rejoignez notre réseau associatif et participez à des actions de résilience socio-environnementale.</p>
+                        <div class="entite-stats mb-2">
+                            <span class="text-muted small"><i class="fas fa-users me-1"></i> 30+ membres actifs</span>
+                        </div>
+                        <button class="btn-soumettre" data-entite="association" data-nom="BETA-Résilience Association" style="background: #2E7D32; color: white; border: none; padding: 8px 20px; border-radius: 25px; transition: all 0.3s ease;">
+                            <i class="fas fa-paper-plane me-2"></i> Soumettre une demande
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Entité 2 : Bureau d'étude -->
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card entite-card h-100 border-0 shadow-sm p-3 text-center" style="border-top: 4px solid #1565C0;">
+                        <div class="entite-icon mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; background: #1565C020; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #1565C0;">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <h5 class="fw-bold">BETA-Résilience Bureau d'étude</h5>
+                        <span class="badge mb-2" style="background: #1565C0; color: white;">Bureau d'étude</span>
+                        <p class="text-muted small">Expertise et conseil en environnement, études d'impact, cartographie et géomatique.</p>
+                        <div class="entite-stats mb-2">
+                            <span class="text-muted small"><i class="fas fa-file-alt me-1"></i> 10+ études réalisées</span>
+                        </div>
+                        <button class="btn-soumettre" data-entite="bureau_etude" data-nom="BETA-Résilience Bureau d'étude" style="background: #1565C0; color: white; border: none; padding: 8px 20px; border-radius: 25px; transition: all 0.3s ease;">
+                            <i class="fas fa-paper-plane me-2"></i> Soumettre une demande
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Entité 3 : INVEST -->
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="card entite-card h-100 border-0 shadow-sm p-3 text-center" style="border-top: 4px solid #E65100;">
+                        <div class="entite-icon mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; background: #E6510020; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #E65100;">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h5 class="fw-bold">BETA-Résilience INVEST</h5>
+                        <span class="badge mb-2" style="background: #E65100; color: white;">INVEST</span>
+                        <p class="text-muted small">Investissements durables dans l'agriculture, l'immobilier, la pisciculture et l'agroécologie.</p>
+                        <div class="entite-stats mb-2">
+                            <span class="text-muted small"><i class="fas fa-handshake me-1"></i> 5+ projets financés</span>
+                        </div>
+                        <button class="btn-soumettre" data-entite="invest" data-nom="BETA-Résilience INVEST" style="background: #E65100; color: white; border: none; padding: 8px 20px; border-radius: 25px; transition: all 0.3s ease;">
+                            <i class="fas fa-paper-plane me-2"></i> Soumettre une demande
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Entité 4 : Laboratoire -->
+                <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                    <div class="card entite-card h-100 border-0 shadow-sm p-3 text-center" style="border-top: 4px solid #6A1B9A;">
+                        <div class="entite-icon mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; background: #6A1B9A20; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #6A1B9A;">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <h5 class="fw-bold">Laboratoire Résilience</h5>
+                        <span class="badge mb-2" style="background: #6A1B9A; color: white;">Laboratoire</span>
+                        <p class="text-muted small">Recherche scientifique transdisciplinaire sur la résilience des sociétés et des écosystèmes.</p>
+                        <div class="entite-stats mb-2">
+                            <span class="text-muted small"><i class="fas fa-microscope me-1"></i> 15+ publications scientifiques</span>
+                        </div>
+                        <button class="btn-soumettre" data-entite="laboratoire" data-nom="Laboratoire Résilience" style="background: #6A1B9A; color: white; border: none; padding: 8px 20px; border-radius: 25px; transition: all 0.3s ease;">
+                            <i class="fas fa-paper-plane me-2"></i> Soumettre une demande
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== STATISTIQUES (Visiteurs non connectés) ===== -->
+    <section class="stats-section py-5" style="background: #f8f9fa;">
+        <div class="container">
+            <div class="row g-4 text-center">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
+                        <h2 class="display-4 fw-bold text-success">50+</h2>
+                        <p class="text-muted">Demandes traitées</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
+                        <h2 class="display-4 fw-bold text-success">4</h2>
+                        <p class="text-muted">Entités actives</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item" data-aos="fade-up" data-aos-delay="300">
+                        <h2 class="display-4 fw-bold text-success">30+</h2>
+                        <p class="text-muted">Membres actifs</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-item" data-aos="fade-up" data-aos-delay="400">
+                        <h2 class="display-4 fw-bold text-success">15+</h2>
+                        <p class="text-muted">Publications scientifiques</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== APPEL À L'ACTION (Visiteurs non connectés) ===== -->
+    <section class="cta-section py-5" style="background: linear-gradient(135deg, #1B5E20, #2E7D32);">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8 text-white">
+                    <h3 class="fw-bold">Rejoindre BETA-Résilience</h3>
+                    <p class="mb-0">Devenez membre et participez à la construction de solutions résilientes pour l'Afrique.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <a href="{% url 'membres:adhesion' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-user-plus"></i> Adhérer maintenant
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endif %}
+
+<!-- ===== MODAL DE DEMANDE ===== -->
+<div class="modal fade" id="demandeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #2E7D32; color: white;">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-paper-plane me-2"></i> Soumettre une demande
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="entite-info" class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Vous soumettez une demande pour : <strong id="entite-nom">BETA-Résilience</strong>
+                </div>
+                
+                <form method="post" action="{% url 'demandes:soumettre' %}" enctype="multipart/form-data" id="demandeForm">
+                    {% csrf_token %}
+                    
+                    <input type="hidden" name="entite" id="id_entite_hidden" value="">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nom <span class="text-danger">*</span></label>
+                                <input type="text" name="nom" class="form-control" required placeholder="Votre nom">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Prénom <span class="text-danger">*</span></label>
+                                <input type="text" name="prenom" class="form-control" required placeholder="Votre prénom">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                                <input type="email" name="email" class="form-control" required placeholder="votre@email.com">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Téléphone <span class="text-danger">*</span></label>
+                                <input type="tel" name="telephone" class="form-control" required placeholder="6XX-XXX-XXX">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Type de demande <span class="text-danger">*</span></label>
+                                <select name="type_demande" id="id_type_demande" class="form-select" required>
+                                    <option value="">Sélectionnez un type</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6" id="autre_type_container" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Autre type (précisez)</label>
+                                <input type="text" name="autre_type" class="form-control" placeholder="Précisez votre type de demande">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Société / Institution</label>
+                                <input type="text" name="societe" class="form-control" placeholder="Nom de votre société (optionnel)">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Fonction</label>
+                                <input type="text" name="fonction" class="form-control" placeholder="Votre fonction (optionnel)">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Objet de la demande <span class="text-danger">*</span></label>
+                        <input type="text" name="objet" class="form-control" required placeholder="Sujet de votre demande">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Message <span class="text-danger">*</span></label>
+                        <textarea name="message" class="form-control" rows="4" required placeholder="Décrivez votre demande en détail..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Document joint (optionnel)</label>
+                        <input type="file" name="fichier" class="form-control">
+                        <small class="text-muted">Formats acceptés : PDF, DOC, DOCX (max 5 Mo)</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100 btn-lg">
+                        <i class="fas fa-paper-plane me-2"></i> Envoyer ma demande
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ===== ENTITÉ CARDS ===== */
+.entite-card {
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+.entite-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.12) !important;
+}
+.entite-icon {
+    transition: all 0.3s ease;
+}
+.entite-card:hover .entite-icon {
+    transform: scale(1.1);
+}
+.btn-soumettre {
+    transition: all 0.3s ease;
+}
+.btn-soumettre:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.section-title::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: #2E7D32;
+    margin: 10px auto;
+    border-radius: 2px;
+}
+.stat-item {
+    transition: all 0.3s ease;
+}
+.stat-item:hover {
+    transform: translateY(-5px);
+}
+.stat-card {
+    transition: all 0.3s ease;
+}
+.stat-card:hover {
+    transform: scale(1.05);
+}
+@media (max-width: 768px) {
+    .entite-card {
+        margin-bottom: 15px;
+    }
+    .hero-section .display-4 {
+        font-size: 2rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Types de demande par entité
+    const TYPES_DEMANDE = {
+        'association': [
+            ['adhesion', 'Adhésion'],
+            ['benefice', 'Bénévolat'],
+            ['don', 'Don'],
+            ['partenariat', 'Partenariat associatif'],
+            ['information', 'Demande d\'information'],
+        ],
+        'bureau_etude': [
+            ['etude', 'Étude environnementale'],
+            ['expertise', 'Expertise technique'],
+            ['conseil', 'Conseil stratégique'],
+            ['formation', 'Formation'],
+            ['prestation', 'Prestation de service'],
+        ],
+        'invest': [
+            ['investissement', 'Investissement'],
+            ['partenariat', 'Partenariat économique'],
+            ['financement', 'Financement de projet'],
+            ['conseil', 'Conseil en investissement'],
+        ],
+        'laboratoire': [
+            ['collaboration', 'Collaboration scientifique'],
+            ['recherche', 'Projet de recherche'],
+            ['publication', 'Publication scientifique'],
+            ['stage', 'Stage / Recherche'],
+            ['partenariat', 'Partenariat académique'],
+        ]
+    };
+    
+    const boutons = document.querySelectorAll('.btn-soumettre');
+    boutons.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const entite = this.dataset.entite;
+            const nom = this.dataset.nom;
+            
+            document.getElementById('entite-nom').textContent = nom;
+            document.getElementById('id_entite_hidden').value = entite;
+            
+            mettreAJourTypes(entite);
+            
+            var modal = new bootstrap.Modal(document.getElementById('demandeModal'));
+            modal.show();
+        });
+    });
+    
+    function mettreAJourTypes(entite) {
+        const select = document.getElementById('id_type_demande');
+        const autreContainer = document.getElementById('autre_type_container');
+        
+        select.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Sélectionnez un type';
+        select.appendChild(defaultOption);
+        
+        const types = TYPES_DEMANDE[entite] || [];
+        types.forEach(function(type) {
+            const option = document.createElement('option');
+            option.value = type[0];
+            option.textContent = type[1];
+            select.appendChild(option);
+        });
+        
+        const autreOption = document.createElement('option');
+        autreOption.value = 'autre';
+        autreOption.textContent = 'Autre (précisez)';
+        select.appendChild(autreOption);
+        
+        autreContainer.style.display = 'none';
+        document.querySelector('input[name="autre_type"]').value = '';
+        
+        select.addEventListener('change', function() {
+            autreContainer.style.display = this.value === 'autre' ? 'block' : 'none';
+        });
+    }
+});
+</script>
+
+{% endblock %}

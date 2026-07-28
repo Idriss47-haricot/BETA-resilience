@@ -1,0 +1,77 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ sujet.titre }} - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'core:accueil' %}">Accueil</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'forums:index' %}">Forums</a></li>
+                        <li class="breadcrumb-item"><a href="{{ sujet.categorie.get_absolute_url }}">{{ sujet.categorie.nom }}</a></li>
+                        <li class="breadcrumb-item active">{{ sujet.titre|truncatechars:30 }}</li>
+                    </ol>
+                </nav>
+                
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light py-3">
+                        <h4 class="mb-0">{{ sujet.titre }}</h4>
+                        <small class="text-muted">
+                            Par {{ sujet.auteur.username }} · {{ sujet.date_creation|date:"d/m/Y H:i" }}
+                            · {{ sujet.get_nb_messages }} messages
+                        </small>
+                    </div>
+                    <div class="card-body">
+                        <div class="sujet-contenu mb-4">
+                            {{ sujet.contenu|linebreaks }}
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Messages -->
+                        {% for message in messages %}
+                        <div class="message-item mb-3 p-3 bg-light rounded" id="message-{{ message.id }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>{{ message.auteur.username }}</strong>
+                                <small class="text-muted">{{ message.date_creation|date:"d/m/Y H:i" }}</small>
+                            </div>
+                            <p class="mb-0 mt-2">{{ message.contenu|linebreaks }}</p>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Aucun message dans ce sujet.</p>
+                        {% endfor %}
+                        
+                        <hr>
+                        
+                        <!-- Répondre -->
+                        {% if user.is_authenticated and not sujet.est_ferme %}
+                        <h5 class="text-success">Répondre</h5>
+                        <form method="post" action="{% url 'forums:repondre' sujet.slug %}">
+                            {% csrf_token %}
+                            {{ form.contenu }}
+                            <button type="submit" class="btn btn-success mt-2">
+                                <i class="fas fa-reply me-2"></i> Répondre
+                            </button>
+                        </form>
+                        {% elif sujet.est_ferme %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-lock me-2"></i> Ce sujet est fermé.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <a href="{% url 'login' %}" class="text-success">Connectez-vous</a> pour répondre.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

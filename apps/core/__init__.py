@@ -1,0 +1,1 @@
+# Application principale de BETA-Résilience

@@ -1,0 +1,152 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Nos Projets - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header py-5" style="background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white;">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Nos Projets</h1>
+        <p class="lead">Découvrez nos réalisations</p>
+    </div>
+</section>
+
+<!-- Filtres et recherche -->
+<section class="py-4 bg-light border-bottom">
+    <div class="container">
+        <form method="get" class="row g-3 align-items-center">
+            <div class="col-md-3">
+                <select name="statut" class="form-select" onchange="this.form.submit()">
+                    <option value="">Tous les statuts</option>
+                    <option value="en_cours" {% if statut_actuel == 'en_cours' %}selected{% endif %}>En cours</option>
+                    <option value="boucle" {% if statut_actuel == 'boucle' %}selected{% endif %}>Bouclés</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="categorie" class="form-select" onchange="this.form.submit()">
+                    <option value="">Toutes les catégories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.slug }}" {% if categorie_actuelle == cat.slug %}selected{% endif %}>
+                        {{ cat.nom }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Rechercher..." value="{{ search_query }}">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-2 text-md-end">
+                <a href="{% url 'projets:list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-times"></i> Réinitialiser
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Liste des projets -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            {% for projet in projets %}
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:100 }}">
+                <div class="card projet-card h-100 border-0 shadow-sm hover-shadow transition">
+                    {% if projet.image_principale %}
+                    <img src="{{ projet.image_principale.url }}" class="card-img-top" alt="{{ projet.titre }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="fas fa-project-diagram text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge {% if projet.statut == 'en_cours' %}bg-success{% elif projet.statut == 'boucle' %}bg-secondary{% else %}bg-warning{% endif %}">
+                                {{ projet.get_statut_display }}
+                            </span>
+                            {% if projet.categories.all %}
+                            <span class="text-muted small">
+                                {% for cat in projet.categories.all|slice:":2" %}
+                                <span class="badge bg-light text-dark">{{ cat.nom }}</span>
+                                {% endfor %}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <h5 class="card-title fw-bold">{{ projet.titre }}</h5>
+                        <p class="card-text text-muted small">{{ projet.description_courte|truncatewords:15 }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="far fa-calendar-alt me-1"></i>
+                                {{ projet.date_debut|date:"d/m/Y" }}
+                                {% if projet.date_fin %}
+                                - {{ projet.date_fin|date:"d/m/Y" }}
+                                {% endif %}
+                            </small>
+                            <a href="{% url 'projets:detail' projet.slug %}" class="btn btn-outline-success btn-sm">
+                                Détails <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-inbox text-muted" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3">Aucun projet trouvé</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        {{ num }}
+                    </a>
+                </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+.projet-card:hover {
+    transform: translateY(-5px);
+}
+.pagination .page-item.active .page-link {
+    background-color: #2E7D32;
+    border-color: #2E7D32;
+}
+.pagination .page-link {
+    color: #2E7D32;
+}
+</style>
+
+{% endblock %}

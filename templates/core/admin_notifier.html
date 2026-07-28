@@ -1,0 +1,47 @@
+{% extends 'admin/base_site.html' %}
+
+{% block content %}
+<div class="module">
+    <h2>📧 Envoyer une notification à tous les membres</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-row">
+            <label>Titre *</label>
+            <input type="text" name="titre" class="vTextField" required style="width:100%;">
+        </div>
+        
+        <div class="form-row">
+            <label>Message *</label>
+            <textarea name="message" class="vTextField" rows="5" required style="width:100%;"></textarea>
+        </div>
+        
+        <div class="form-row">
+            <label>Type</label>
+            <select name="type" style="width:100%;">
+                <option value="systeme">⚙️ Système</option>
+                <option value="nouveau_document">📄 Nouveau document</option>
+                <option value="evenement_proche">📅 Événement</option>
+                <option value="message_forum">💬 Forum</option>
+            </select>
+        </div>
+        
+        <div class="form-row">
+            <label>Lien (optionnel)</label>
+            <input type="text" name="lien" class="vTextField" placeholder="/page/" style="width:100%;">
+        </div>
+        
+        <div class="form-row">
+            <input type="checkbox" name="envoyer_email" id="envoyer_email">
+            <label for="envoyer_email">📧 Envoyer aussi par email</label>
+        </div>
+        
+        <div class="submit-row">
+            <button type="submit" class="button" style="background:#2E7D32; color:white; padding:10px 20px; border:none; border-radius:4px; cursor:pointer;">
+                <i class="fas fa-paper-plane"></i> Envoyer la notification
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

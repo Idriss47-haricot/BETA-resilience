@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #2E7D32; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>BETA-Résilience</h1>
+            <p>Confirmation de votre demande d'adhésion</p>
+        </div>
+        
+        <div class="content">
+            <p>Bonjour <strong>{{ demande.prenom }} {{ demande.nom }}</strong>,</p>
+            
+            <p>Nous vous remercions pour votre demande d'adhésion au Groupe BETA-Résilience.</p>
+            
+            <p>Votre demande a bien été enregistrée et sera traitée dans les plus brefs délais.</p>
+            
+            <h3>Récapitulatif de votre demande</h3>
+            <ul>
+                <li><strong>Nom complet :</strong> {{ demande.prenom }} {{ demande.nom }}</li>
+                <li><strong>Email :</strong> {{ demande.email }}</li>
+                <li><strong>Téléphone :</strong> {{ demande.telephone }}</li>
+                <li><strong>Profession :</strong> {{ demande.profession }}</li>
+                <li><strong>Date de soumission :</strong> {{ demande.date_soumission|date:"d/m/Y H:i" }}</li>
+            </ul>
+            
+            <p><strong>Prochaines étapes :</strong></p>
+            <ol>
+                <li>Notre équipe examinera votre demande.</li>
+                <li>Vous recevrez une réponse par email dans un délai de 7 jours.</li>
+                <li>Si votre demande est acceptée, vous recevrez vos identifiants de connexion.</li>
+            </ol>
+            
+            <p>Pour toute question, n'hésitez pas à nous contacter à l'adresse suivante : 
+            <a href="mailto:{{ site_config.email }}">{{ site_config.email }}</a></p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; {{ current_year }} BETA-Résilience - Tous droits réservés</p>
+            <p>
+                <a href="{% url 'core:accueil' %}">Visitez notre site</a> |
+                <a href="{% url 'contacts:contact' %}">Contactez-nous</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

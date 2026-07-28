@@ -1,0 +1,143 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ evenement.titre }} - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'core:accueil' %}">Accueil</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'evenements:liste' %}">Événements</a></li>
+                        <li class="breadcrumb-item active">{{ evenement.titre|truncatechars:30 }}</li>
+                    </ol>
+                </nav>
+                
+                <div class="card border-0 shadow-sm">
+                    {% if evenement.image %}
+                    <img src="{{ evenement.image.url }}" class="card-img-top" alt="{{ evenement.titre }}" style="max-height: 350px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <span class="badge bg-{{ evenement.get_type_badge }} fs-6">
+                                {{ evenement.get_type_evenement_display }}
+                            </span>
+                            <span class="badge bg-{{ evenement.get_statut_badge }} fs-6">
+                                {{ evenement.get_statut_display }}
+                            </span>
+                            {% if evenement.est_gratuit %}
+                            <span class="badge bg-success fs-6">Gratuit</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark fs-6">{{ evenement.prix }} FCFA</span>
+                            {% endif %}
+                        </div>
+                        
+                        <h1 class="display-6 fw-bold text-success">{{ evenement.titre }}</h1>
+                        
+                        <div class="evenement-info mt-4">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-calendar-day text-success me-2 mt-1"></i>
+                                        <div>
+                                            <strong>Date</strong>
+                                            <p class="mb-0">{{ evenement.date_debut|date:"d/m/Y H:i" }}</p>
+                                            <p class="mb-0 text-muted small">Jusqu'au {{ evenement.date_fin|date:"d/m/Y H:i" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-map-marker-alt text-success me-2 mt-1"></i>
+                                        <div>
+                                            <strong>Lieu</strong>
+                                            <p class="mb-0">{{ evenement.lieu }}</p>
+                                            {% if evenement.adresse %}
+                                            <p class="mb-0 text-muted small">{{ evenement.adresse }}</p>
+                                            {% endif %}
+                                            {% if evenement.url_lieu %}
+                                            <a href="{{ evenement.url_lieu }}" target="_blank" class="small text-success">
+                                                <i class="fas fa-external-link-alt"></i> Voir sur Google Maps
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="evenement-description">
+                            <h5 class="text-success">Description</h5>
+                            <p>{{ evenement.description|linebreaks }}</p>
+                        </div>
+                        
+                        {% if evenement.programme %}
+                        <div class="evenement-programme mt-3">
+                            <h5 class="text-success">Programme</h5>
+                            <p>{{ evenement.programme|linebreaks }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if evenement.intervenants %}
+                        <div class="evenement-intervenants mt-3">
+                            <h5 class="text-success">Intervenants</h5>
+                            <p>{{ evenement.intervenants|linebreaks }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="evenement-inscription mt-4 p-3 bg-light rounded">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <p class="mb-0">
+                                        <strong>👥 Inscriptions :</strong>
+                                        {{ evenement.get_nb_inscriptions }}/{{ evenement.capacite_max }}
+                                        {% if evenement.places_restantes > 0 %}
+                                        <span class="text-success">({{ evenement.places_restantes }} places restantes)</span>
+                                        {% else %}
+                                        <span class="text-danger">(Complet)</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    {% if user.is_authenticated %}
+                                        {% if evenement.statut != 'termine' and evenement.statut != 'annule' %}
+                                            {% if est_inscrit %}
+                                                <span class="badge bg-success fs-6 me-2">✅ Inscrit</span>
+                                                <a href="{% url 'evenements:annuler' evenement.slug %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Annuler votre inscription ?')">
+                                                    <i class="fas fa-times"></i> Annuler
+                                                </a>
+                                            {% elif est_liste_attente %}
+                                                <span class="badge bg-warning fs-6 me-2">⏳ Liste d'attente</span>
+                                            {% elif evenement.est_complet %}
+                                                <button class="btn btn-secondary btn-sm" disabled>Complet</button>
+                                                <span class="text-muted small">(Liste d'attente automatique)</span>
+                                            {% else %}
+                                                <a href="{% url 'evenements:inscrire' evenement.slug %}" class="btn btn-success btn-lg">
+                                                    <i class="fas fa-plus me-2"></i> S'inscrire
+                                                </a>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">Inscriptions closes</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <a href="{% url 'login' %}" class="btn btn-success btn-lg">
+                                            <i class="fas fa-sign-in-alt me-2"></i> Se connecter pour s'inscrire
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

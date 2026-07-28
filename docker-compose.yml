@@ -1,0 +1,75 @@
+# docker-compose.yml pour BETA-Résilience
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: beta_resilience_db
+      POSTGRES_USER: beta_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - beta_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beta_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    networks:
+      - beta_network
+
+  web:
+    build: .
+    restart: always
+    environment:
+      DJANGO_ENV: production
+      SECRET_KEY: ${SECRET_KEY}
+      DB_NAME: beta_resilience_db
+      DB_USER: beta_user
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      REDIS_URL: redis://redis:6379/1
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+    networks:
+      - beta_network
+    ports:
+      - "80:80"
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    volumes:
+      - ./docker/nginx-production.conf:/etc/nginx/nginx.conf:ro
+      - media_data:/app/media:ro
+      - static_data:/app/staticfiles:ro
+    ports:
+      - "443:443"
+    depends_on:
+      - web
+    networks:
+      - beta_network
+
+volumes:
+  postgres_data:
+  media_data:
+  static_data:
+
+networks:
+  beta_network:
+    driver: bridge

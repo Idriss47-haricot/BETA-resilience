@@ -1,0 +1,162 @@
+/* ============================================
+   BETA-Résilience - CSS Responsive
+   ============================================ */
+
+/* ---------- Tablettes ---------- */
+@media (max-width: 992px) {
+    .container {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    .hero-section .display-4 {
+        font-size: 2.8rem;
+    }
+    
+    .navbar-nav {
+        padding: 10px 0;
+    }
+    .navbar-nav .nav-item {
+        margin: 3px 0;
+    }
+    
+    .page-header .display-4 {
+        font-size: 2.2rem;
+    }
+    
+    .membre-card .membre-photo {
+        width: 120px;
+        height: 120px;
+    }
+}
+
+/* ---------- Mobiles ---------- */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 400px;
+        padding: 60px 0;
+        text-align: center;
+    }
+    .hero-section .display-4 {
+        font-size: 2rem;
+    }
+    .hero-section .lead {
+        font-size: 1rem;
+    }
+    
+    .page-header {
+        padding: 40px 0;
+        text-align: center;
+    }
+    .page-header .display-4 {
+        font-size: 1.8rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    .footer .footer-brand {
+        text-align: center;
+    }
+    .footer .social-links {
+        text-align: center;
+    }
+    .footer .social-links a {
+        margin: 0 4px;
+    }
+    
+    .pagination .page-link {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .contact-info .d-flex {
+        flex-direction: column;
+        text-align: center;
+    }
+    .contact-info .icon-box {
+        margin: 0 auto 10px !important;
+    }
+    
+    /* Disposition des cartes en colonne */
+    .row.g-4 > [class*="col-"] {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+
+/* ---------- Très petits écrans ---------- */
+@media (max-width: 576px) {
+    .hero-section {
+        min-height: 320px;
+        padding: 40px 0;
+    }
+    .hero-section .display-4 {
+        font-size: 1.6rem;
+    }
+    .hero-section .btn {
+        padding: 8px 18px;
+        font-size: 0.85rem;
+        margin: 3px;
+    }
+    
+    .page-header .display-4 {
+        font-size: 1.4rem;
+    }
+    .page-header .lead {
+        font-size: 0.9rem;
+    }
+    
+    .membre-card .membre-photo {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .service-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.8rem;
+    }
+    
+    .btn-lg {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+    
+    .form-control {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+    }
+    
+    .pagination .page-item .page-link {
+        padding: 4px 10px;
+        font-size: 0.8rem;
+    }
+    
+    #scrollTopBtn {
+        width: 40px;
+        height: 40px;
+        bottom: 20px;
+        right: 20px;
+        font-size: 0.9rem;
+    }
+}
+
+/* ---------- Impression ---------- */
+@media print {
+    .navbar, .footer, #scrollTopBtn, .share-section {
+        display: none !important;
+    }
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+    .container {
+        max-width: 100% !important;
+    }
+}

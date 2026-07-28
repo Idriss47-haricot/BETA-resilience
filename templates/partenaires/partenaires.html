@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Partenaires - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header py-5" style="background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white;">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Nos Partenaires</h1>
+        <p class="lead">Ils nous font confiance</p>
+    </div>
+</section>
+
+<!-- Partenaires -->
+<section class="py-5">
+    <div class="container">
+        {% for type, liste in partenaires_par_type.items %}
+        {% if liste %}
+        <div class="mb-5" data-aos="fade-up">
+            <h3 class="text-success mb-4">{{ type }}</h3>
+            <div class="row g-4">
+                {% for partenaire in liste %}
+                <div class="col-lg-3 col-md-4 col-6">
+                    <div class="card partenaire-card h-100 border-0 shadow-sm text-center p-3 hover-shadow transition">
+                        {% if partenaire.logo %}
+                        <img src="{{ partenaire.logo.url }}" alt="{{ partenaire.nom }}" class="img-fluid mb-2" style="height: 80px; object-fit: contain;">
+                        {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center mb-2" style="height: 80px;">
+                            <i class="fas fa-building text-muted" style="font-size: 2rem;"></i>
+                        </div>
+                        {% endif %}
+                        <h6 class="fw-bold" style="font-size: 13px;">{{ partenaire.nom }}</h6>
+                        <p class="text-muted small" style="font-size: 11px;">{{ partenaire.description|truncatewords:10 }}</p>
+                        {% if partenaire.site_web %}
+                        <a href="{{ partenaire.site_web }}" class="btn btn-outline-success btn-sm" target="_blank">
+                            <i class="fas fa-external-link-alt me-1"></i> Site
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</section>
+
+<style>
+.partenaire-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+}
+</style>
+
+{% endblock %}

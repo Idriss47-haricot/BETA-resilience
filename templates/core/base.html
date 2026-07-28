@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- SEO -->
+    <title>{% block title %}{{ site_config.site_name|default:"BETA-Résilience" }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ site_config.meta_description|default:"BETA-Résilience - Groupe d'expertise en résilience socio-environnementale. Solutions innovantes pour les défis du développement durable au Cameroun et en Afrique." }}{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}{{ site_config.meta_keywords|default:"résilience, développement durable, environnement, Cameroun, Afrique, études, expertise, agroécologie, géomatique" }}{% endblock %}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{% block og_title %}{{ site_config.site_name|default:"BETA-Résilience" }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ site_config.meta_description|default:"BETA-Résilience - Expertise en résilience socio-environnementale" }}{% endblock %}">
+    <meta property="og:image" content="{% if site_config.logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_config.logo.url }}{% else %}{% static 'images/logo/default-og.jpg' %}{% endif %}">
+    <meta property="og:site_name" content="{{ site_config.site_name|default:"BETA-Résilience" }}">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ site_config.site_name|default:"BETA-Résilience" }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ site_config.meta_description|default:"BETA-Résilience - Expertise en résilience socio-environnementale" }}{% endblock %}">
+    <meta name="twitter:image" content="{% if site_config.logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_config.logo.url }}{% endif %}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% if site_config.favicon %}{{ site_config.favicon.url }}{% else %}{% static 'images/favicon.png' %}{% endif %}">
+    <link rel="apple-touch-icon" href="{% if site_config.favicon %}{{ site_config.favicon.url }}{% endif %}">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- AOS Animation CSS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    
+    <!-- Google Analytics -->
+    {% if site_config.google_analytics_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ site_config.google_analytics_id }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ site_config.google_analytics_id }}');
+    </script>
+    {% endif %}
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- ============ HEADER / NAVIGATION ============ -->
+<header id="header">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'core:accueil' %}">
+                {% if site_config.logo %}
+                <img src="{{ site_config.logo.url }}" alt="{{ site_config.site_name }}" height="50" class="logo-desktop">
+                {% else %}
+                <span class="fw-bold text-success fs-4">{{ site_config.site_name|default:"BETA-Résilience" }}</span>
+                {% endif %}
+            </a>
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav ms-auto">
+                    <!-- Accueil -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'core:accueil' %}">
+                            <i class="fas fa-home"></i> Accueil
+                        </a>
+                    </li>
+                    
+                    <!-- À Propos -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if 'a-propos' in request.path %}active{% endif %}" href="#" id="aboutDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-info-circle"></i> À Propos
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="aboutDropdown">
+                            <li><a class="dropdown-item" href="{% url 'core:a_propos' %}">Présentation</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:historique' %}">Historique</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:vision' %}">Vision</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:missions' %}">Missions</a></li>
+                            <li><a class="dropdown-item" href="{% url 'core:structuration' %}">Structuration</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'membres:equipe' %}">Équipe dirigeante</a></li>
+                            <li><a class="dropdown-item" href="{% url 'membres:adhesion' %}">Adhésion</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Missions -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'missions' in request.path %}active{% endif %}" href="{% url 'core:missions' %}">
+                            <i class="fas fa-bullseye"></i> Missions
+                        </a>
+                    </li>
+                    
+                    <!-- Projets -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'projets' in request.path %}active{% endif %}" href="{% url 'projets:list' %}">
+                            <i class="fas fa-project-diagram"></i> Projets
+                        </a>
+                    </li>
+                    
+                    <!-- Actualités -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'actualites' in request.path %}active{% endif %}" href="{% url 'actualites:list' %}">
+                            <i class="fas fa-newspaper"></i> Actualités
+                        </a>
+                    </li>
+                    
+                    <!-- Documents -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'documents' in request.path %}active{% endif %}" href="{% url 'documents:list' %}">
+                            <i class="fas fa-file-alt"></i> Documents
+                        </a>
+                    </li>
+                    
+                    <!-- Partenaires -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'partenaires' in request.path %}active{% endif %}" href="{% url 'partenaires:list' %}">
+                            <i class="fas fa-handshake"></i> Partenaires
+                        </a>
+                    </li>
+                    
+                    <!-- Contact -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'contact' in request.path %}active{% endif %}" href="{% url 'contacts:contact' %}">
+                            <i class="fas fa-envelope"></i> Contact
+                        </a>
+                    </li>
+                    
+                    <!-- ========================================== -->
+                    <!-- ✅ CONNEXION / ESPACE MEMBRE / ADMIN      -->
+                    <!-- ========================================== -->
+                    
+                    <!-- Si l'utilisateur est connecté -->
+                    {% if user.is_authenticated %}
+                        
+                        <!-- Si l'utilisateur est un super-admin (staff) -->
+                        {% if user.is_staff or user.is_superuser %}
+<li class="nav-item">
+    <a class="nav-link text-success fw-bold" href="/admin/">
+        <i class="fas fa-user-cog"></i> Dashboard
+    </a>
+</li>
+{% endif %}
+                        
+                        <!-- Menu utilisateur connecté -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle"></i> {{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <!-- Espace membre -->
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'membres:dashboard' %}">
+                                        <i class="fas fa-tachometer-alt"></i> Tableau de bord
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'membres:profil' %}">
+                                        <i class="fas fa-user-edit"></i> Mon profil
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'membres:mes-demandes' %}">
+                                        <i class="fas fa-file-alt"></i> Mes demandes
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{% url 'logout' %}" method="POST" style="display: inline; width: 100%;">
+    {% csrf_token %}
+    <button type="submit" class="dropdown-item text-danger" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer;">
+        <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Déconnexion
+    </button>
+</form>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Forums -->
+<li class="nav-item">
+    <a class="nav-link {% if 'forums' in request.path %}active{% endif %}" href="{% url 'forums:index' %}">
+        <i class="fas fa-comments"></i> Forums
+    </a>
+</li>
+                        
+                    <!-- Si l'utilisateur n'est pas connecté -->
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt"></i> Connexion
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'membres:adhesion' %}">
+                                <i class="fas fa-user-plus"></i> Adhérer
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- ============ CONTENU PRINCIPAL ============ -->
+<main id="main">
+    <!-- Espace pour la navbar fixe -->
+    <div style="height: 80px;"></div>
+    
+    <!-- Messages de notification -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Contenu de la page -->
+    {% block content %}{% endblock %}
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer text-light pt-5 pb-3 mt-5" style="background-color: #6f42c1 !important;">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Colonne 1: À Propos -->
+            <div class="col-lg-4 col-md-6">
+                <div class="footer-brand">
+                    {% if site_config.logo_footer %}
+                    <img src="{{ site_config.logo_footer.url }}" alt="{{ site_config.site_name }}" height="40" class="mb-3">
+                    {% else %}
+                    <h5 class="text-white fw-bold">{{ site_config.site_name|default:"BETA-Résilience" }}</h5>
+                    {% endif %}
+                    <p class="text-light opacity-75 small mt-2">{{ site_config.footer_text|default:"Groupe d'expertise en résilience socio-environnementale" }}</p>
+                </div>
+                <div class="social-links mt-3">
+                    {% if site_config.facebook %}
+                    <a href="{{ site_config.facebook }}" class="text-white me-2" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    {% endif %}
+                    {% if site_config.linkedin %}
+                    <a href="{{ site_config.linkedin }}" class="text-white me-2" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    {% endif %}
+                    {% if site_config.twitter %}
+                    <a href="{{ site_config.twitter }}" class="text-white me-2" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    {% endif %}
+                    {% if site_config.instagram %}
+                    <a href="{{ site_config.instagram }}" class="text-white me-2" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    {% endif %}
+                    {% if site_config.youtube %}
+                    <a href="{{ site_config.youtube }}" class="text-white me-2" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    {% endif %}
+                    {% if site_config.whatsapp %}
+                    <a href="{{ site_config.whatsapp }}" class="text-white" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Colonne 2: Liens rapides -->
+            <div class="col-lg-2 col-md-6">
+                <h6 class="text-white fw-bold">Liens rapides</h6>
+                <ul class="list-unstyled small">
+                    <li><a href="{% url 'core:accueil' %}" class="text-light text-decoration-none hover-link">Accueil</a></li>
+                    <li><a href="{% url 'core:a_propos' %}" class="text-light text-decoration-none hover-link">À Propos</a></li>
+                    <li><a href="{% url 'core:missions' %}" class="text-light text-decoration-none hover-link">Missions</a></li>
+                    <li><a href="{% url 'projets:list' %}" class="text-light text-decoration-none hover-link">Projets</a></li>
+                    <li><a href="{% url 'actualites:list' %}" class="text-light text-decoration-none hover-link">Actualités</a></li>
+                    <li><a href="{% url 'contacts:contact' %}" class="text-light text-decoration-none hover-link">Contact</a></li>
+                </ul>
+            </div>
+            
+            <!-- Colonne 3: Dernières actualités -->
+            <div class="col-lg-3 col-md-6">
+                <h6 class="text-white fw-bold">Dernières actualités</h6>
+                <ul class="list-unstyled small">
+                    {% for article in footer_actualites %}
+                    <li class="mb-2">
+                        <a href="{% url 'actualites:detail' article.slug %}" class="text-light text-decoration-none hover-link">
+                            {{ article.titre|truncatechars:45 }}
+                        </a>
+                        <span class="d-block text-white-50" style="font-size: 11px;">
+                            <i class="far fa-calendar-alt me-1"></i>{{ article.date_publication|date:"d/m/Y" }}
+                        </span>
+                    </li>
+                    {% empty %}
+                    <li class="text-light opacity-75">Aucune actualité</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <!-- Colonne 4: Contact -->
+            <div class="col-lg-3 col-md-6">
+                <h6 class="text-white fw-bold">Contact</h6>
+                <address class="small text-light">
+                    {% if site_config.address %}
+                    <p class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>{{ site_config.address }}</p>
+                    {% endif %}
+                    {% if site_config.boite_postale %}
+                    <p class="mb-2"><i class="fas fa-envelope me-2"></i>{{ site_config.boite_postale }}</p>
+                    {% endif %}
+                    {% if site_config.phone %}
+                    <p class="mb-2"><i class="fas fa-phone me-2"></i>{{ site_config.phone }}</p>
+                    {% endif %}
+                    {% if site_config.email %}
+                    <p class="mb-2"><i class="fas fa-at me-2"></i>{{ site_config.email }}</p>
+                    {% endif %}
+                </address>
+                <a href="{% url 'contacts:contact' %}" class="btn btn-outline-light btn-sm mt-1">
+                    <i class="fas fa-paper-plane me-1"></i> Nous écrire
+                </a>
+            </div>
+        </div>
+        
+        <hr class="border-light opacity-25 mt-4">
+        <div class="text-center text-light opacity-75 small">
+            &copy; {{ current_year }} {{ site_config.copyright_text|default:"BETA-Résilience - Tous droits réservés" }}
+            <br>
+            <a href="{% url 'core:conditions' %}" class="text-light text-decoration-none hover-link">Conditions d'utilisation</a>
+            <span class="mx-2">|</span>
+            <a href="{% url 'core:mentions_legales' %}" class="text-light text-decoration-none hover-link">Mentions légales</a>
+        </div>
+    </div>
+</footer>
+
+<!-- ============ SCRIPTS ============ -->
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- AOS Animation JS -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({
+        duration: 800,
+        once: true,
+        offset: 100
+    });
+</script>
+
+<!-- Custom JS -->
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+
+<!-- Scroll to top button -->
+<button id="scrollTopBtn" class="btn btn-success rounded-circle position-fixed" style="bottom: 30px; right: 30px; display: none; width: 50px; height: 50px; z-index: 999;">
+    <i class="fas fa-arrow-up"></i>
+</button>
+
+<script>
+    // Scroll to top
+    const scrollBtn = document.getElementById('scrollTopBtn');
+    window.addEventListener('scroll', function() {
+        if (window.scrollY > 300) {
+            scrollBtn.style.display = 'block';
+        } else {
+            scrollBtn.style.display = 'none';
+        }
+    });
+    scrollBtn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+</script>
+
+</body>
+</html>

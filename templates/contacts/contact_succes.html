@@ -1,0 +1,44 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Message envoyé - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <div class="mb-4" style="font-size: 5rem; color: #2E7D32;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        
+                        <h1 class="display-5 fw-bold text-success">Message envoyé avec succès !</h1>
+                        
+                        <p class="lead mt-3">
+                            Votre message a bien été transmis à l'équipe de BETA-Résilience.
+                        </p>
+                        
+                        <div class="alert alert-success mt-4">
+                            <i class="fas fa-envelope me-2"></i>
+                            Nous vous répondrons dans les plus brefs délais.
+                        </div>
+                        
+                        <div class="mt-4 d-flex flex-wrap gap-3 justify-content-center">
+                            <a href="{% url 'core:accueil' %}" class="btn btn-success">
+                                <i class="fas fa-home me-2"></i> Retour à l'accueil
+                            </a>
+                            <a href="{% url 'contacts:contact' %}" class="btn btn-outline-success">
+                                <i class="fas fa-envelope me-2"></i> Envoyer un autre message
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Préférences de notifications - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-4">
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'membres:dashboard' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tachometer-alt me-2"></i> Tableau de bord
+                        </a>
+                        <a href="{% url 'membres:profil' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-edit me-2"></i> Mon profil
+                        </a>
+                        <a href="{% url 'membres:mes-demandes' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-file-alt me-2"></i> Mes demandes
+                        </a>
+                        <a href="{% url 'notifications:liste' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-bell me-2"></i> Notifications
+                        </a>
+                        <a href="{% url 'notifications:preferences' %}" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-cog me-2"></i> Préférences
+                        </a>
+                        <a href="{% url 'logout' %}" class="list-group-item list-group-item-action text-danger">
+                            <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contenu -->
+            <div class="col-lg-9">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cog text-success me-2"></i>
+                            Préférences de notifications
+                        </h5>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <h6 class="text-success">📧 Canaux de notification</h6>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="email_notifications" 
+                                           name="email_notifications" {% if preferences.email_notifications %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_notifications">
+                                        Notifications par email
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="push_notifications" 
+                                           name="push_notifications" {% if preferences.push_notifications %}checked{% endif %}>
+                                    <label class="form-check-label" for="push_notifications">
+                                        Notifications sur le site
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="email_resume_quotidien" 
+                                           name="email_resume_quotidien" {% if preferences.email_resume_quotidien %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_resume_quotidien">
+                                        Résumé quotidien par email
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <h6 class="text-success">🔔 Types de notifications</h6>
+                            <div class="row">
+                                {% for type, label in types_notifications %}
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" 
+                                               name="types_actives" value="{{ type }}"
+                                               id="type_{{ type }}"
+                                               {% if type in preferences.get_types_actives %}checked{% endif %}>
+                                        <label class="form-check-label" for="type_{{ type }}">
+                                            {{ label }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i> Enregistrer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

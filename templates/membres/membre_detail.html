@@ -1,0 +1,81 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ membre.prenom }} {{ membre.nom }} - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4" data-aos="fade-right">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="membre-photo mx-auto mb-3" style="width: 200px; height: 200px; border-radius: 50%; overflow: hidden; border: 4px solid #2E7D32;">
+                            <img src="{{ membre.photo_url }}" alt="{{ membre.nom_complet }}" class="w-100 h-100" style="object-fit: cover;">
+                        </div>
+                        <h4 class="fw-bold">{{ membre.prenom }} {{ membre.nom }}</h4>
+                        <p class="text-success fw-semibold">{{ membre.fonction.nom|default:"Membre" }}</p>
+                        {% if membre.statut %}
+                        <p class="text-muted small">{{ membre.statut }}</p>
+                        {% endif %}
+                        
+                        <hr>
+                        
+                        <div class="text-start">
+                            {% if membre.email %}
+                            <p><i class="fas fa-envelope text-success me-2"></i>{{ membre.email }}</p>
+                            {% endif %}
+                            {% if membre.telephone %}
+                            <p><i class="fas fa-phone text-success me-2"></i>{{ membre.telephone }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="social-links mt-3">
+                            {% if membre.linkedin %}
+                            <a href="{{ membre.linkedin }}" class="btn btn-outline-primary btn-sm me-1" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+                            {% endif %}
+                            {% if membre.twitter %}
+                            <a href="{{ membre.twitter }}" class="btn btn-outline-info btn-sm me-1" target="_blank"><i class="fab fa-twitter"></i></a>
+                            {% endif %}
+                            {% if membre.researchgate %}
+                            <a href="{{ membre.researchgate }}" class="btn btn-outline-secondary btn-sm me-1" target="_blank"><i class="fab fa-researchgate"></i></a>
+                            {% endif %}
+                            {% if membre.google_scholar %}
+                            <a href="{{ membre.google_scholar }}" class="btn btn-outline-secondary btn-sm" target="_blank"><i class="fas fa-graduation-cap"></i></a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-8" data-aos="fade-left">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h3 class="text-success">Biographie</h3>
+                        <div class="biographie-content">
+                            {{ membre.biographie|linebreaks }}
+                        </div>
+                        
+                        {% if membre.articles.all %}
+                        <h4 class="text-success mt-4">Articles publiés</h4>
+                        <ul class="list-unstyled">
+                            {% for article in membre.articles.all %}
+                            <li class="mb-2">
+                                <a href="{% url 'actualites:detail' article.slug %}" class="text-decoration-none">
+                                    <i class="fas fa-file-alt text-success me-2"></i>
+                                    {{ article.titre }}
+                                </a>
+                                <span class="text-muted small">({{ article.date_publication|date:"d/m/Y" }})</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

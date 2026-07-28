@@ -1,0 +1,7 @@
+{
+  "name": "beta-resilience",
+  "version": "1.0.0",
+  "scripts": {
+    "vercel-build": "pip install -r requirements.txt --break-system-packages && python3 manage.py collectstatic --noinput"
+  }
+}

@@ -1,0 +1,22 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block branding %}
+<div id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <i class="fas fa-leaf" style="color:#2E7D32;"></i>
+        BETA-Résilience Administration
+    </a>
+</div>
+{% endblock %}
+
+{% block nav-global %}
+<div style="float:right; margin-right:20px; margin-top:5px;">
+    <a href="{% url 'admin:notifications_notification_add' %}?envoyer_a_tous=on" 
+       class="button" 
+       style="background:#2E7D32; color:white; padding:8px 15px; border-radius:4px; text-decoration:none;">
+        <i class="fas fa-bell"></i> Notifier tous les membres
+    </a>
+</div>
+{{ block.super }}
+{% endblock %}

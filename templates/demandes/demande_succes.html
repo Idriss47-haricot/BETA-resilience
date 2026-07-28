@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Demande envoyée - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <div class="mb-4" style="font-size: 5rem; color: #2E7D32;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        
+                        <h1 class="display-5 fw-bold text-success">Demande envoyée avec succès !</h1>
+                        
+                        <p class="lead mt-3">
+                            Votre demande a été prise en compte par notre équipe.
+                        </p>
+                        
+                        <div class="alert alert-success mt-4">
+                            <i class="fas fa-envelope me-2"></i>
+                            Un email de confirmation vous a été envoyé.
+                        </div>
+                        
+                        <p class="text-muted mt-3">
+                            Nous traiterons votre demande dans les plus brefs délais.
+                            Vous recevrez une réponse par email prochainement.
+                        </p>
+                        
+                        <div class="mt-4 d-flex flex-wrap gap-3 justify-content-center">
+                            <a href="{% url 'core:accueil' %}" class="btn btn-success">
+                                <i class="fas fa-home me-2"></i> Retour à l'accueil
+                            </a>
+                            <a href="{% url 'contacts:contact' %}" class="btn btn-outline-success">
+                                <i class="fas fa-envelope me-2"></i> Nous contacter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
