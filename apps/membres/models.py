@@ -389,3 +389,31 @@ class HistoriqueEmail(models.Model):
 
     def __str__(self):
         return f'{self.get_type_email_display()} - {self.destinataire} ({self.date_envoi.strftime("%d/%m/%Y %H:%M")})'
+
+
+class MembreAssociation(Membre):
+    class Meta:
+        proxy = True
+        verbose_name = 'Membre - Association'
+        verbose_name_plural = '👥 Membres · Association'
+
+
+class MembreBureauEtude(Membre):
+    class Meta:
+        proxy = True
+        verbose_name = "Membre - Bureau d'étude"
+        verbose_name_plural = "👥 Membres · Bureau d'étude"
+
+
+class MembreInvest(Membre):
+    class Meta:
+        proxy = True
+        verbose_name = 'Membre - INVEST'
+        verbose_name_plural = '👥 Membres · INVEST'
+
+
+class MembreLaboratoire(Membre):
+    class Meta:
+        proxy = True
+        verbose_name = 'Membre - Laboratoire'
+        verbose_name_plural = '👥 Membres · Laboratoire'
