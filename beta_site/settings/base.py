@@ -141,8 +141,8 @@ CKEDITOR_CONFIGS = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- AUTHENTIFICATION ---
-LOGIN_URL = '/admin/login/'
-LOGIN_REDIRECT_URL = '/admin/'
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/membres/dashboard/'
 
 # --- MESSAGES ---
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
