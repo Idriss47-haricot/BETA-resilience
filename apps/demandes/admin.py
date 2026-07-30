@@ -54,6 +54,12 @@ class DemandeAdmin(admin.ModelAdmin):
 
     readonly_fields = ('date_soumission', 'date_modification', 'ip_address', 'user_agent')
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # Masquer les demandes d'adhésion déjà traitées (elles sont désormais des Membres)
+        qs = qs.exclude(type_demande='adhesion', statut='traite')
+        return qs
+    
     # ===== AFFICHAGE =====
 
     def nom_complet(self, obj):
