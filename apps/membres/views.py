@@ -46,11 +46,11 @@ class DashboardView(TemplateView):
     Tableau de bord du membre
     """
     template_name = 'membres/dashboard.html'
-    
+    login_url = '/login/'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        # Récupérer le membre
+
         try:
             membre = Membre.objects.get(user=self.request.user)
         except Membre.DoesNotExist:
@@ -62,28 +62,25 @@ class DashboardView(TemplateView):
                 est_actif=True,
                 est_compte_active=True,
             )
-        
+
         context['membre'] = membre
-        
-        # Récupérer les demandes du membre
+
         from apps.demandes.models import Demande
         context['demandes'] = Demande.objects.filter(email=self.request.user.email).order_by('-date_soumission')
-        
-        # Récupérer les inscriptions aux événements
+
         from apps.evenements.models import InscriptionEvenement
         context['inscriptions'] = InscriptionEvenement.objects.filter(
             utilisateur=self.request.user,
             evenement__statut='a_venir'
         ).select_related('evenement').order_by('evenement__date_debut')
-        
-        # Récupérer les notifications non lues
+
         from apps.notifications.models import Notification
         context['notifications'] = Notification.objects.filter(
             utilisateur=self.request.user,
             est_lue=False
         ).order_by('-date_creation')
         context['notifications_non_lues'] = context['notifications'].count()
-        
+
         return context
 
 
@@ -398,19 +395,6 @@ class MembreLoginView(LoginView):
         # Ignorer le paramètre ?next= et forcer notre redirection
         return None
 
-
-class DashboardView(LoginRequiredMixin, TemplateView):
-    """Dashboard du membre connecté"""
-    template_name = 'membres/dashboard.html'
-    login_url = '/login/'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        try:
-            context['membre'] = Membre.objects.get(user=self.request.user)
-        except Membre.DoesNotExist:
-            context['membre'] = None
-        return context
     
 
 class ProfilView(UpdateView):
