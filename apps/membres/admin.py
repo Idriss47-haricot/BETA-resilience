@@ -88,7 +88,7 @@ class MembreAdmin(admin.ModelAdmin):
         'date_validation'
     )
 
-    actions = ['exporter_pdf_par_entite']
+   
 
     def exporter_pdf_par_entite(self, request, queryset):
         buffer = BytesIO()
@@ -168,7 +168,7 @@ class MembreAdmin(admin.ModelAdmin):
         return format_html('<span style="color:#999;">-</span>')
     get_token_status.short_description = 'Token'
     
-    actions = ['exporter_csv', 'activer_membres', 'desactiver_membres']
+    actions = ['exporter_csv', 'exporter_pdf_par_entite', 'activer_membres', 'desactiver_membres']
     
     def exporter_csv(self, request, queryset):
         """Exporter les membres en CSV"""
@@ -214,8 +214,46 @@ class MembreAdmin(admin.ModelAdmin):
         self.message_user(request, f'❌ {count} membre(s) désactivé(s).')
     desactiver_membres.short_description = '❌ Désactiver les membres sélectionnés'
 
+from apps.membres.models import MembreAssociation, MembreBureauEtude, MembreInvest, MembreLaboratoire
 
-admin.register(DemandeAdhesion, site=admin_site)
+
+class MembreEntiteAdminBase(MembreAdmin):
+    """Base commune pour les 4 rubriques par entité"""
+    entite_code = None
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(entite=self.entite_code)
+
+    def save_model(self, request, obj, form, change):
+        obj.entite = self.entite_code
+        super().save_model(request, obj, form, change)
+
+    def get_list_filter(self, request):
+        return [f for f in self.list_filter if f != 'entite']
+
+
+@admin.register(MembreAssociation, site=admin_site)
+class MembreAssociationAdmin(MembreEntiteAdminBase):
+    entite_code = 'association'
+
+
+@admin.register(MembreBureauEtude, site=admin_site)
+class MembreBureauEtudeAdmin(MembreEntiteAdminBase):
+    entite_code = 'bureau_etude'
+
+
+@admin.register(MembreInvest, site=admin_site)
+class MembreInvestAdmin(MembreEntiteAdminBase):
+    entite_code = 'invest'
+
+
+@admin.register(MembreLaboratoire, site=admin_site)
+class MembreLaboratoireAdmin(MembreEntiteAdminBase):
+    entite_code = 'laboratoire'
+
+
+@admin.register(DemandeAdhesion, site=admin_site)
 class DemandeAdhesionAdmin(admin.ModelAdmin):
     list_display = (
         'nom_complet',
