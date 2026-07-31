@@ -25,10 +25,9 @@ def inscription_privee(request):
                 'error': "Ce nom d'utilisateur est déjà pris."
             })
 
-        membre, cree = Membre.objects.get_or_create(
-            email=email,
-            defaults={'nom': '', 'prenom': ''}
-        )
+        membre = Membre.objects.filter(email__iexact=email).order_by('id').first()
+        if membre is None:
+            membre = Membre.objects.create(email=email, nom='', prenom='')
 
         if membre.user:
             user = membre.user
