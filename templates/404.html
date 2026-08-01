@@ -1,0 +1,13 @@
+{% extends 'core/base.html' %}
+{% block title %}Page introuvable - BETA-Résilience{% endblock %}
+{% block content %}
+<section class="py-5 text-center">
+    <div class="container">
+        <h1 class="display-1 fw-bold text-success">404</h1>
+        <p class="lead">La page que vous recherchez n'existe pas ou a été déplacée.</p>
+        <a href="{% url 'accueil' %}" class="btn btn-success mt-3">
+            <i class="fas fa-home me-2"></i> Retour à l'accueil
+        </a>
+    </div>
+</section>
+{% endblock %}
