@@ -27,8 +27,11 @@ def inscription_privee(request):
 
         membre = Membre.objects.filter(email__iexact=email).order_by('id').first()
         if membre is None:
-            membre = Membre.objects.create(email=email, nom='', prenom='')
-
+            return render(request, 'authentification/register.html', {
+                'error': "Aucune demande d'adhésion acceptée n'est associée à cet email. "
+                         "Veuillez d'abord soumettre une demande d'adhésion et attendre son acceptation."
+            })
+            
         if membre.user:
             user = membre.user
             user.username = username
