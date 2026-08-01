@@ -4,7 +4,7 @@ Administration de l'application Demandes avec envoi d'email automatique
 from django.contrib import admin
 from django.utils.html import format_html
 from django.http import HttpResponse
-from django.core.mail import get_connection, EmailMessage
+from django.core.mail import get_connection, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.conf import settings
@@ -201,15 +201,18 @@ class DemandeAdmin(admin.ModelAdmin):
                 fail_silently=False,
             )
 
-            email = EmailMessage(
+            from django.utils.html import strip_tags
+            texte_brut = strip_tags(message_html)
+
+            email = EmailMultiAlternatives(
                 sujet,
-                message_html,
+                texte_brut,
                 settings.DEFAULT_FROM_EMAIL,
                 [email_destinataire],
                 reply_to=reply_to_list,
                 connection=connection,
             )
-            email.content_subtype = 'html'
+            email.attach_alternative(message_html, "text/html")
             email.send(fail_silently=False)
 
             self.message_user(request, f'✅ Email envoyé à {email_destinataire}')
