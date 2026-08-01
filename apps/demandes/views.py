@@ -13,6 +13,9 @@ from django.http import JsonResponse
 from apps.demandes.models import Demande
 from apps.demandes.forms import DemandeForm
 
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
+
 
 class AccueilView(TemplateView):
     """
@@ -72,7 +75,7 @@ class AccueilView(TemplateView):
         
         return context
 
-
+@method_decorator(ratelimit(key='ip', rate='3/h', method='POST', block=True), name='post')
 class DemandeView(CreateView):
     """
     Formulaire de soumission de demande
