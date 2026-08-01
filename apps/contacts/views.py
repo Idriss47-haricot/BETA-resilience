@@ -13,7 +13,10 @@ import json
 from apps.contacts.forms import ContactForm
 from apps.contacts.models import MessageContact
 
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 
+@method_decorator(ratelimit(key='ip', rate='5/h', method='POST', block=True), name='post')
 class ContactView(FormView):
     """
     Formulaire de contact avec reCAPTCHA et email
