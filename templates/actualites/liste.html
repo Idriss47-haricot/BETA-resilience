@@ -1,3 +1,10 @@
+<form method="get" action="{% url 'actualites:recherche' %}" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Rechercher un article..." value="{{ recherche|default:'' }}">
+        <button class="btn btn-success" type="submit"><i class="fas fa-search"></i></button>
+    </div>
+</form>
+
 {% if is_paginated %}
 <nav aria-label="Pagination" class="mt-5">
     <ul class="pagination justify-content-center">
