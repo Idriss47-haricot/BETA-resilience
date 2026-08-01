@@ -13,6 +13,26 @@ from apps.actualites.models import Article, CategorieActualite, Commentaire
 from apps.actualites.forms import CommentaireForm
 
 
+from django.db.models import Q
+
+class RechercheArticleView(ListView):
+    model = Article
+    template_name = 'actualites/liste.html'
+    context_object_name = 'articles'
+    paginate_by = 6
+
+    def get_queryset(self):
+        q = self.request.GET.get('q', '').strip()
+        qs = Article.objects.filter(est_publie=True)
+        if q:
+            qs = qs.filter(Q(titre__icontains=q) | Q(contenu__icontains=q) | Q(extrait__icontains=q))
+        return qs.order_by('-date_publication')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['recherche'] = self.request.GET.get('q', '')
+        return context
+
 class ActualiteListView(ListView):
     """
     Liste des actualités avec filtres et recherche
