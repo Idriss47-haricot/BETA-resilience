@@ -6,6 +6,17 @@ from django.urls import reverse
 from django.utils import timezone
 
 
+from django.core.exceptions import ValidationError
+
+def valider_fichier_demande(fichier):
+    extensions_autorisees = ['.pdf', '.doc', '.docx']
+    ext = '.' + fichier.name.split('.')[-1].lower() if '.' in fichier.name else ''
+    if ext not in extensions_autorisees:
+        raise ValidationError('Seuls les fichiers PDF, DOC et DOCX sont acceptés.')
+    taille_max_mo = 5
+    if fichier.size > taille_max_mo * 1024 * 1024:
+        raise ValidationError(f'Le fichier ne doit pas dépasser {taille_max_mo} Mo.')
+
 class Demande(models.Model):
     """
     Demande soumise par un utilisateur pour une entité
@@ -75,7 +86,13 @@ class Demande(models.Model):
     message = models.TextField('Message')
     
     # Pièce jointe (optionnelle)
-    fichier = models.FileField('Document joint', upload_to='demandes/%Y/%m/', blank=True, null=True)
+    fichier = models.FileField(
+        'Document joint',
+        upload_to='demandes/%Y/%m/',
+        blank=True,
+        null=True,
+        validators=[valider_fichier_demande],
+    )
     
     # Statut
     statut = models.CharField('Statut', max_length=20, choices=STATUT_CHOICES, default='en_attente')
