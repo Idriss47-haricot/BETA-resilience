@@ -132,3 +132,61 @@ class PreferenceNotification(models.Model):
     
     def __str__(self):
         return f'Préférences de {self.utilisateur.username}'
+
+
+from django.core.exceptions import ValidationError
+
+
+def valider_fichier_message(fichier):
+    extensions_autorisees = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.mp4', '.mov', '.webm']
+    ext = '.' + fichier.name.split('.')[-1].lower() if '.' in fichier.name else ''
+    if ext not in extensions_autorisees:
+        raise ValidationError('Format non autorisé (PDF, DOC, images ou vidéo uniquement).')
+    taille_max_mo = 25
+    if fichier.size > taille_max_mo * 1024 * 1024:
+        raise ValidationError(f'Le fichier ne doit pas dépasser {taille_max_mo} Mo.')
+
+
+class MessagePrive(models.Model):
+    """
+    Message échangé entre l'administration et un membre
+    """
+    membre = models.ForeignKey('membres.Membre', related_name='messages', on_delete=models.CASCADE)
+    expediteur = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages_prives_envoyes')
+    contenu = models.TextField('Message', blank=True)
+    fichier = models.FileField(
+        'Pièce jointe',
+        upload_to='messages_prives/%Y/%m/',
+        blank=True,
+        null=True,
+        validators=[valider_fichier_message],
+    )
+    date_envoi = models.DateTimeField(auto_now_add=True)
+    lu_par_membre = models.BooleanField(default=False)
+    lu_par_admin = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['date_envoi']
+        verbose_name = 'Message privé'
+        verbose_name_plural = '💬 Messagerie'
+
+    def __str__(self):
+        return f'{self.expediteur} → {self.membre} ({self.date_envoi:%d/%m/%Y %H:%M})'
+
+    @property
+    def est_message_admin(self):
+        return self.expediteur.is_staff
+
+    @property
+    def extension_fichier(self):
+        if not self.fichier:
+            return ''
+        return self.fichier.name.split('.')[-1].lower()
+
+    @property
+    def est_video(self):
+        return self.extension_fichier in ['mp4', 'mov', 'webm']
+
+    @property
+    def est_image(self):
+        return self.extension_fichier in ['jpg', 'jpeg', 'png']
