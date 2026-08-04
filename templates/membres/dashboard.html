@@ -85,7 +85,7 @@
                             <div class="col-md-3">
                                 <div class="card border-0 bg-light">
                                     <div class="card-body text-center">
-                                        <h2 class="text-success">{{ inscriptions|default:0 }}</h2>
+                                        <h2 class="text-success">{{ inscriptions|length }}</h2>
                                         <p class="text-muted small">Événements</p>
                                     </div>
                                 </div>
@@ -93,7 +93,7 @@
                             <div class="col-md-3">
                                 <div class="card border-0 bg-light">
                                     <div class="card-body text-center">
-                                        <h2 class="text-success">{{ notifications|default:0 }}</h2>
+                                        <h2 class="text-success">{{ notifications_non_lues }}</h2>
                                         <p class="text-muted small">Notifications</p>
                                     </div>
                                 </div>
