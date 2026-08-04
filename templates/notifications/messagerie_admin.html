@@ -1,0 +1,81 @@
+{% extends 'core/base.html' %}
+{% block title %}Messagerie - Administration{% endblock %}
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <h1 class="text-success mb-4"><i class="fas fa-comments me-2"></i> Messagerie</h1>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">Choisir un membre</div>
+                    <div class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
+                        {% for m in membres %}
+                        <a href="{% url 'notifications:messagerie_admin_membre' m.id %}"
+                           class="list-group-item list-group-item-action {% if membre_selectionne.id == m.id %}active{% endif %}">
+                            {{ m.prenom }} {{ m.nom }}
+                            <small class="d-block text-muted">{{ m.get_entite_display }}</small>
+                        </a>
+                        {% empty %}
+                        <div class="p-3 text-muted">Aucun membre actif.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                {% if membre_selectionne %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        Conversation avec {{ membre_selectionne.prenom }} {{ membre_selectionne.nom }}
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        {% for msg in fil_messages %}
+                        <div class="mb-3 {% if msg.est_message_admin %}text-end{% endif %}">
+                            <div class="d-inline-block p-2 rounded {% if msg.est_message_admin %}bg-success text-white{% else %}bg-light{% endif %}" style="max-width: 75%;">
+                                {% if msg.contenu %}<div>{{ msg.contenu|linebreaksbr }}</div>{% endif %}
+                                {% if msg.fichier %}
+                                    {% if msg.est_video %}
+                                    <video controls class="w-100 mt-2" style="max-height: 250px;">
+                                        <source src="{{ msg.fichier.url }}">
+                                    </video>
+                                    {% elif msg.est_image %}
+                                    <img src="{{ msg.fichier.url }}" class="img-fluid mt-2 rounded" alt="Pièce jointe">
+                                    {% else %}
+                                    <a href="{{ msg.fichier.url }}" target="_blank" class="d-block mt-2">
+                                        <i class="fas fa-paperclip me-1"></i> Fichier joint
+                                    </a>
+                                    {% endif %}
+                                {% endif %}
+                                <small class="d-block mt-1 opacity-75">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Aucun message pour l'instant.</p>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer bg-white">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-2">
+                                <textarea name="contenu" class="form-control" rows="2" placeholder="Votre message..."></textarea>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <input type="file" name="fichier" class="form-control form-control-sm w-50">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-paper-plane me-1"></i> Envoyer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-hand-pointer fa-2x mb-3"></i>
+                    <p>Sélectionne un membre à gauche pour démarrer une conversation.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
