@@ -1,7 +1,8 @@
 """
 Utilitaires pour l'envoi d'emails aux membres avec historique
 """
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
+from django.utils.html import strip_tags
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.contrib import messages
@@ -66,14 +67,14 @@ def envoyer_invitation(demande, request=None):
         admin_nom = request.user.get_full_name() if request and request.user.is_authenticated else ''
         ip_admin = request.META.get('REMOTE_ADDR', '') if request else ''
         
-        email = EmailMessage(
+        email = EmailMultiAlternatives(
             sujet,
-            message_html,
+            strip_tags(message_html),
             settings.DEFAULT_FROM_EMAIL or 'contact@beta-resilience.org',
             [demande.email],
             reply_to=[settings.CONTACT_EMAIL or 'contact@beta-resilience.org'],
         )
-        email.content_subtype = 'html'
+        email.attach_alternative(message_html, "text/html")
         
         try:
             email.send(fail_silently=False)
@@ -133,14 +134,14 @@ def envoyer_refus(demande, request=None):
         admin_nom = request.user.get_full_name() if request and request.user.is_authenticated else ''
         ip_admin = request.META.get('REMOTE_ADDR', '') if request else ''
         
-        email = EmailMessage(
+        email = EmailMultiAlternatives(
             sujet,
-            message_html,
+            strip_tags(message_html),
             settings.DEFAULT_FROM_EMAIL or 'contact@beta-resilience.org',
             [demande.email],
             reply_to=[settings.CONTACT_EMAIL or 'contact@beta-resilience.org'],
         )
-        email.content_subtype = 'html'
+        email.attach_alternative(message_html, "text/html")
         
         try:
             email.send(fail_silently=False)
@@ -202,14 +203,14 @@ def envoyer_rappel_activation(membre, request=None):
         admin_nom = request.user.get_full_name() if request and request.user.is_authenticated else ''
         ip_admin = request.META.get('REMOTE_ADDR', '') if request else ''
         
-        email = EmailMessage(
+        email = EmailMultiAlternatives(
             sujet,
-            message_html,
+            strip_tags(message_html),
             settings.DEFAULT_FROM_EMAIL or 'contact@beta-resilience.org',
-            [membre.email],
+            [demande.email],
             reply_to=[settings.CONTACT_EMAIL or 'contact@beta-resilience.org'],
         )
-        email.content_subtype = 'html'
+        email.attach_alternative(message_html, "text/html")
         
         try:
             email.send(fail_silently=False)
@@ -256,14 +257,14 @@ def envoyer_confirmation_activation(membre, request=None):
         admin_nom = request.user.get_full_name() if request and request.user.is_authenticated else ''
         ip_admin = request.META.get('REMOTE_ADDR', '') if request else ''
         
-        email = EmailMessage(
+        email = EmailMultiAlternatives(
             sujet,
-            message_html,
+            strip_tags(message_html),
             settings.DEFAULT_FROM_EMAIL or 'contact@beta-resilience.org',
-            [membre.email],
+            [demande.email],
             reply_to=[settings.CONTACT_EMAIL or 'contact@beta-resilience.org'],
         )
-        email.content_subtype = 'html'
+        email.attach_alternative(message_html, "text/html")
         
         try:
             email.send(fail_silently=False)
@@ -374,14 +375,14 @@ def envoyer_identifiants_membre(demande, membre):
         message_html = render_to_string('membres/email_identifiants.html', context)
         
         # Créer et envoyer l'email
-        email = EmailMessage(
+        email = EmailMultiAlternatives(
             sujet,
-            message_html,
+            strip_tags(message_html),
             settings.DEFAULT_FROM_EMAIL or 'contact@beta-resilience.org',
             [demande.email],
             reply_to=[settings.CONTACT_EMAIL or 'contact@beta-resilience.org'],
         )
-        email.content_subtype = 'html'
+        email.attach_alternative(message_html, "text/html")
         email.send(fail_silently=False)
         
         # Marquer comme envoyé
