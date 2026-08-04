@@ -21,6 +21,7 @@
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Mot de passe</label>
                                 <input type="password" name="password" class="form-control" required placeholder="Votre mot de passe">
+                                <a href="{% url 'authentification:password_reset' %}" class="small">Mot de passe oublié ?</a>
                             </div>
                             <input type="hidden" name="next" value="{{ next }}">
                             <button type="submit" class="btn btn-success w-100 btn-lg">
