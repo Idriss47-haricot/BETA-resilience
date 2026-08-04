@@ -82,8 +82,12 @@ class DemandeView(CreateView):
     """
     model = Demande
     form_class = DemandeForm
-    template_name = 'demandes/demande_form.html'
     success_url = reverse_lazy('demandes:succes')
+
+    def get_template_names(self):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return ['demandes/demande_form.html']
+        return ['demandes/demande_page.html']
     
     def form_valid(self, form):
         # Sauvegarder la demande
