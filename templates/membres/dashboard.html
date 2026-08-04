@@ -42,6 +42,9 @@
         <i class="fas fa-bell me-2"></i> Notifications
         <span class="badge bg-danger float-end" id="notif-badge">0</span>
     </a>
+     <a href="{% url 'notifications:messagerie_membre' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-comments me-2"></i> Mes messages
+    </a>                   
     <a href="{% url 'evenements:liste' %}" class="list-group-item list-group-item-action">
         <i class="fas fa-calendar-alt me-2"></i> Événements
     </a>
