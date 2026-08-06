@@ -278,6 +278,13 @@ class DemandeAdhesion(models.Model):
         verbose_name='Membre associé'
     )
 
+    entite = models.CharField(
+        'Entité choisie', 
+        max_length=20, 
+        choices=Membre.ENTITE_CHOICES, 
+        default='association'
+    )
+
     # Timestamps
     date_soumission = models.DateTimeField('Date de soumission', auto_now_add=True)
     date_traitement = models.DateTimeField('Date de traitement', null=True, blank=True)
@@ -308,6 +315,7 @@ class DemandeAdhesion(models.Model):
             prenom=self.prenom,
             email=self.email,
             telephone=self.telephone,
+            entite=self.entite,  # ✅ Transfert automatique de l'entité
             est_actif=True,
             date_validation=timezone.now(),
         )
