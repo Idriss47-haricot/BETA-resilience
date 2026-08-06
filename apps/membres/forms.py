@@ -65,7 +65,7 @@ class DemandeAdhesionForm(forms.ModelForm):
     class Meta:
         model = DemandeAdhesion
         fields = [
-            'nom', 'prenom', 'email', 'telephone', 'date_naissance',
+            'entite', 'nom', 'prenom', 'email', 'telephone', 'date_naissance',
             'profession', 'motivation', 'competences', 'cv', 'lettre_motivation'
         ]
         widgets = {
