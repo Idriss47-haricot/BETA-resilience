@@ -131,7 +131,7 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <a href="#" class="btn btn-sm btn-outline-success">Voir</a>
+                                            <a href="{% url 'membres:ma_demande_detail' demande.id %}" class="btn btn-sm btn-outline-success">Voir</a>
                                         </td>
                                     </tr>
                                     {% empty %}
