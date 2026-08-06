@@ -79,7 +79,7 @@ urlpatterns = [
     path('evenements/', include('apps.evenements.urls', namespace='evenements')),
 
     path('register/', TemplateView.as_view(template_name='authentification/register.html'), name='register_prive'),
-    
+    path('membres/ma-demande/<int:pk>/', MaDemandeDetailView.as_view(), name='ma_demande_detail'),
     
     
 
