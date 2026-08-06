@@ -23,6 +23,7 @@ from apps.membres.forms import ProfilMembreForm
 from django.views.generic import UpdateView
 from django.shortcuts import resolve_url
 from django.contrib.admin.views.decorators import staff_member_required
+from apps.membres.forms import DemandeAdhesionForm, MembreRegistrationForm, ActivationForm 
 
 
 
