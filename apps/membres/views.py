@@ -17,14 +17,13 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 
 from apps.membres.models import Membre, Fonction, DemandeAdhesion
-from apps.membres.forms import DemandeAdhesionForm, MembreRegistrationForm, ActivationForm
-# from apps.membres.utils import generer_carte_membre_response, envoyer_carte_membre_email
+
+from apps.membres.utils import generer_carte_membre_response, envoyer_carte_membre_email
 from apps.membres.forms import ProfilMembreForm
 from django.views.generic import UpdateView
 from django.shortcuts import resolve_url
 from django.contrib.admin.views.decorators import staff_member_required
-from apps.membres.forms import DemandeAdhesionForm, MembreRegistrationForm, ActivationForm 
-
+from apps.membres.forms import DemandeAdhesionForm, ActivationForm
 
 
 @staff_member_required
