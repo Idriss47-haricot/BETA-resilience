@@ -1,26 +1,39 @@
 """
-Administration de l'application Membres - Version avec envoi d'identifiants
+Administration de l'application Membres - Version optimisée sans répétitions
 """
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+import csv
 from io import BytesIO
-from django.contrib import admin
-from django.utils.html import format_html
+
+from django.contrib import admin, messages
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.urls import reverse
 from django.utils import timezone
-from django.contrib import messages
-from django.contrib.auth.models import User
-from apps.core.admin import admin_site
-from apps.membres.models import Membre, Fonction, DemandeAdhesion
-from apps.membres.utils import envoyer_invitation, envoyer_refus, envoyer_identifiants_membre
-import csv
-from apps.membres.models import Membre, Fonction, DemandeAdhesion, HistoriqueEmail
+from django.utils.html import format_html
 
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+from apps.core.admin import admin_site
+from apps.membres.models import (
+    DemandeAdhesion,
+    Fonction,
+    HistoriqueEmail,
+    Membre,
+    MembreAssociation,
+    MembreBureauEtude,
+    MembreInvest,
+    MembreLaboratoire,
+)
+from apps.membres.utils import (
+    envoyer_identifiants_membre,
+    envoyer_invitation,
+    envoyer_refus,
+)
 
 
 @admin.register(Fonction, site=admin_site)
@@ -54,7 +67,7 @@ class MembreAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('🔐 Compte utilisateur', {
-        'fields': ('user',)
+            'fields': ('user',)
         }),
         ('👤 Informations personnelles', {
             'fields': ('entite', 'nom', 'prenom', 'photo', 'fonction', 'statut', 'biographie')
@@ -88,8 +101,6 @@ class MembreAdmin(admin.ModelAdmin):
         'date_invitation',
         'date_validation'
     )
-
-   
 
     def exporter_pdf_par_entite(self, request, queryset):
         buffer = BytesIO()
@@ -139,24 +150,19 @@ class MembreAdmin(admin.ModelAdmin):
     exporter_pdf_par_entite.short_description = '📄 Exporter en PDF (par entité)'
     
     def get_photo_preview(self, obj):
-        """Afficher un aperçu de la photo"""
         if obj.photo:
             return format_html(
                 '<img src="{}" width="40" height="40" style="object-fit:cover;border-radius:50%; border:2px solid #2E7D32;"/>',
                 obj.photo.url
             )
-        return format_html(
-            '<span style="font-size:20px;">👤</span>'
-        )
+        return format_html('<span style="font-size:20px;">👤</span>')
     get_photo_preview.short_description = 'Photo'
     
     def nom_complet(self, obj):
-        """Retourner le nom complet"""
         return f'{obj.prenom} {obj.nom}'
     nom_complet.short_description = 'Nom complet'
     
     def get_token_status(self, obj):
-        """Afficher le statut du token d'activation"""
         if obj.est_compte_active:
             return format_html('<span style="color:#2E7D32;font-weight:bold;">✅ Activé</span>')
         if obj.token_expiration:
@@ -172,20 +178,12 @@ class MembreAdmin(admin.ModelAdmin):
     actions = ['exporter_csv', 'exporter_pdf_par_entite', 'activer_membres', 'desactiver_membres']
     
     def exporter_csv(self, request, queryset):
-        """Exporter les membres en CSV"""
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="membres.csv"'
         
         writer = csv.writer(response)
         writer.writerow([
-            'Nom', 
-            'Prénom', 
-            'Email', 
-            'Téléphone', 
-            'Fonction', 
-            'Actif', 
-            'Compte activé', 
-            'Date validation'
+            'Nom', 'Prénom', 'Email', 'Téléphone', 'Fonction', 'Actif', 'Compte activé', 'Date validation'
         ])
         
         for membre in queryset:
@@ -204,18 +202,14 @@ class MembreAdmin(admin.ModelAdmin):
     exporter_csv.short_description = '📊 Exporter les membres en CSV'
     
     def activer_membres(self, request, queryset):
-        """Activer les membres sélectionnés"""
         count = queryset.update(est_actif=True)
         self.message_user(request, f'✅ {count} membre(s) activé(s).')
     activer_membres.short_description = '✅ Activer les membres sélectionnés'
     
     def desactiver_membres(self, request, queryset):
-        """Désactiver les membres sélectionnés"""
         count = queryset.update(est_actif=False)
         self.message_user(request, f'❌ {count} membre(s) désactivé(s).')
     desactiver_membres.short_description = '❌ Désactiver les membres sélectionnés'
-
-from apps.membres.models import MembreAssociation, MembreBureauEtude, MembreInvest, MembreLaboratoire
 
 
 class MembreEntiteAdminBase(MembreAdmin):
@@ -338,13 +332,43 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
         return format_html('<span style="color:#FFA000;">⏳ Non envoyé</span>')
     email_envoye_badge.short_description = 'Email'
     
+    # ===== HELPER POUR ÉVITER LA RÉPÉTITION =====
+    def _traiter_acceptation(self, request, demande):
+        """Méthode utilitaire commune pour créer le membre et envoyer ses identifiants"""
+        if not demande.membre:
+            membre = Membre.objects.create(
+                nom=demande.nom,
+                prenom=demande.prenom,
+                email=demande.email,
+                telephone=demande.telephone,
+                est_actif=True,
+            )
+            demande.membre = membre
+            demande.save()
+
+        success, username, _ = envoyer_identifiants_membre(demande, demande.membre)
+
+        if success:
+            demande.statut = 'acceptee'
+            demande.date_traitement = timezone.now()
+            demande.save()
+            self.message_user(
+                request,
+                f'✅ Identifiants envoyés à {demande.prenom} {demande.nom} (username: {username})'
+            )
+            return True
+        else:
+            self.message_user(
+                request,
+                f'⚠️ Erreur lors de l\'envoi des identifiants pour {demande.prenom} {demande.nom}',
+                level='ERROR'
+            )
+            return False
+
     # ===== ACTIONS PERSONNALISÉES =====
     actions = ['accepter_et_envoyer_identifiants', 'refuser_demandes', 'renvoyer_invitations', 'exporter_csv']
     
     def accepter_et_envoyer_identifiants(self, request, queryset):
-        """
-        Accepter les demandes sélectionnées, créer un compte et envoyer les identifiants
-        """
         count = 0
         erreurs = 0
         
@@ -357,55 +381,19 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
                 )
                 continue
             
-            # Vérifier si un membre existe déjà
-            if not demande.membre:
-                # Créer le membre
-                membre = Membre.objects.create(
-                    nom=demande.nom,
-                    prenom=demande.prenom,
-                    email=demande.email,
-                    telephone=demande.telephone,
-                    est_actif=True,
-                )
-                demande.membre = membre
-                demande.save()
-            
-            # Envoyer les identifiants
-            success, username, password = envoyer_identifiants_membre(demande, demande.membre)
-            
-            if success:
-                demande.statut = 'acceptee'
-                demande.date_traitement = timezone.now()
-                demande.save()
+            if self._traiter_acceptation(request, demande):
                 count += 1
-                self.message_user(
-                    request,
-                    f'✅ Identifiants envoyés à {demande.prenom} {demande.nom} (username: {username})'
-                )
             else:
                 erreurs += 1
-                self.message_user(
-                    request,
-                    f'⚠️ Erreur lors de l\'envoi des identifiants pour {demande.prenom} {demande.nom}',
-                    level='ERROR'
-                )
         
         if count > 0:
-            self.message_user(
-                request,
-                f'✅ {count} demande(s) acceptée(s) et identifiants envoyés !'
-            )
+            self.message_user(request, f'✅ {count} demande(s) acceptée(s) et identifiants envoyés !')
         if erreurs > 0:
-            self.message_user(
-                request,
-                f'⚠️ {erreurs} erreur(s) lors de l\'envoi des identifiants.',
-                level='ERROR'
-            )
+            self.message_user(request, f'⚠️ {erreurs} erreur(s) lors de l\'envoi des identifiants.', level='ERROR')
     
     accepter_et_envoyer_identifiants.short_description = '✅ Accepter + Envoyer les identifiants'
     
     def refuser_demandes(self, request, queryset):
-        """Refuser les demandes sélectionnées et envoyer l'email de refus"""
         count = 0
         for demande in queryset:
             if demande.peut_etre_refusee():
@@ -423,7 +411,6 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
     refuser_demandes.short_description = '❌ Refuser + Envoyer l\'email de refus'
     
     def renvoyer_invitations(self, request, queryset):
-        """Renvoyer l'invitation aux demandes acceptées"""
         count = 0
         for demande in queryset:
             if demande.statut == 'acceptee' and demande.membre:
@@ -462,7 +449,6 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
     exporter_csv.short_description = '📊 Exporter les demandes en CSV'
     
     def save_model(self, request, obj, form, change):
-        """Sauvegarder et gérer les changements de statut"""
         old_statut = None
         if change:
             try:
@@ -473,56 +459,27 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
         
         super().save_model(request, obj, form, change)
         
-        # Si le statut a changé
         if change and old_statut != obj.statut:
-            # Si le statut devient 'acceptee'
-            if obj.statut == 'acceptee' and not obj.membre:
+            if obj.statut == 'acceptee':
                 try:
-                    # Créer le membre
-                    membre = Membre.objects.create(
-                        nom=obj.nom,
-                        prenom=obj.prenom,
-                        email=obj.email,
-                        telephone=obj.telephone,
-                        est_actif=True,
-                    )
-                    obj.membre = membre
-                    obj.save()
-                    
-                    # Envoyer les identifiants
-                    success, username, password = envoyer_identifiants_membre(obj, membre)
-                    
-                    if success:
-                        self.message_user(
-                            request, 
-                            f'✅ Demande acceptée et identifiants envoyés à {obj.email} (username: {username})'
-                        )
-                    else:
-                        self.message_user(
-                            request, 
-                            f'⚠️ Demande acceptée mais erreur lors de l\'envoi des identifiants à {obj.email}',
-                            level='ERROR'
-                        )
+                    self._traiter_acceptation(request, obj)
                 except Exception as e:
                     self.message_user(
                         request, 
                         f'⚠️ Erreur lors de l\'acceptation: {str(e)}',
                         level='ERROR'
                     )
-            # Si le statut devient 'refusee'
             elif obj.statut == 'refusee':
                 try:
                     envoyer_refus(obj, request)
-                    self.message_user(
-                        request, 
-                        f'✅ Email de refus envoyé à {obj.email}'
-                    )
+                    self.message_user(request, f'✅ Email de refus envoyé à {obj.email}')
                 except Exception as e:
                     self.message_user(
                         request, 
                         f'⚠️ Erreur lors de l\'envoi du refus: {str(e)}',
                         level='ERROR'
                     )
+
 
 @admin.register(HistoriqueEmail, site=admin_site)
 class HistoriqueEmailAdmin(admin.ModelAdmin):
