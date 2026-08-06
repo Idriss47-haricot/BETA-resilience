@@ -17,6 +17,7 @@ urlpatterns = [
     path('profil/', views.ProfilView.as_view(), name='profil'),
     path('mes-demandes/', views.MesDemandesView.as_view(), name='mes-demandes'),
     path('dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('membres/ma-demande/<int:pk>/', MaDemandeDetailView.as_view(), name='ma_demande_detail'),
 
 
 ]
