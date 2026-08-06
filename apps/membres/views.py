@@ -431,3 +431,13 @@ class ProfilView(UpdateView):
     def form_invalid(self, form):
         messages.error(self.request, '❌ Veuillez corriger les erreurs ci-dessous.')
         return super().form_invalid(form)
+
+
+class MaDemandeDetailView(LoginRequiredMixin, DetailView):
+    model = Demande
+    template_name = 'membres/ma_demande_detail.html'
+    context_object_name = 'demande'
+    login_url = '/login/'
+
+    def get_queryset(self):
+        return Demande.objects.filter(email=self.request.user.email)
