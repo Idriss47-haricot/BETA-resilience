@@ -13,7 +13,6 @@ from apps.core.views import redirect_after_login
 from apps.membres.views import MembreLoginView
 
 
-
 # ✅ IMPORT DU ADMIN PERSONNALISÉ
 from apps.core.admin import admin_site
 
