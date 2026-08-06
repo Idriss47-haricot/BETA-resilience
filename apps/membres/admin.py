@@ -21,57 +21,6 @@ import csv
 from apps.membres.models import Membre, Fonction, DemandeAdhesion, HistoriqueEmail
 
 from reportlab.pdfgen import canvas
-from .models import (
-    Membre, MembreAssociation, MembreBureauEtude, 
-    MembreInvest, MembreLaboratoire, DemandeAdhesion
- )
-
-# Action globale pour exporter en PDF
-def export_pdf_membres(modeladmin, request, queryset):
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="liste_membres.pdf"'
-    
-    p = canvas.Canvas(response)
-    p.setFont("Helvetica-Bold", 16)
-    p.drawString(100, 800, f"Liste des Membres - {queryset[0].get_entite_display() if queryset else 'BETA'}")
-    
-    y = 750
-    p.setFont("Helvetica", 12)
-    for m in queryset:
-        p.drawString(100, y, f"- {m.nom} {m.prenom} ({m.email})")
-        y -= 20
-    
-    p.showPage()
-    p.save()
-    return response
-
-export_pdf_membres.short_description = "📄 Tirer l'état PDF des membres sélectionnés"
-
-# Classe de base pour les rubriques d'entités
-class EntiteMembreAdmin(admin.ModelAdmin):
-    list_display = ('nom', 'prenom', 'email', 'est_actif', 'date_adhesion')
-    list_filter = ('est_actif', 'date_adhesion')
-    actions = [export_pdf_membres]
-
-@admin.register(MembreAssociation, site=admin_site)
-class MembreAssociationAdmin(EntiteMembreAdmin):
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(entite='association')
-
-@admin.register(MembreBureauEtude, site=admin_site)
-class MembreBureauEtudeAdmin(EntiteMembreAdmin):
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(entite='bureau_etude')
-
-@admin.register(MembreInvest, site=admin_site)
-class MembreInvestAdmin(EntiteMembreAdmin):
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(entite='invest')
-
-@admin.register(MembreLaboratoire, site=admin_site)
-class MembreLaboratoireAdmin(EntiteMembreAdmin):
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(entite='laboratoire')
 
 
 @admin.register(Fonction, site=admin_site)
