@@ -10,7 +10,7 @@ from django.contrib.sitemaps.views import sitemap
 from django.views.generic import TemplateView
 from django.contrib.auth import views as auth_views
 from apps.core.views import redirect_after_login 
-from apps.membres.views import MembreLoginView # ✅ Correction
+from apps.membres.views import MembreLoginView
 
 
 
