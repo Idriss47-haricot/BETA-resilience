@@ -11,7 +11,6 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 import secrets
 import string
-from apps.membres.utils import generer_carte_membre_response, envoyer_carte_membre_email, envoyer_confirmation_activation
 
 
 
