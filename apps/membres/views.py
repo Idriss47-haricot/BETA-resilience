@@ -24,7 +24,6 @@ from django.views.generic import UpdateView
 from django.shortcuts import resolve_url
 from django.contrib.admin.views.decorators import staff_member_required
 from apps.membres.forms import DemandeAdhesionForm, ActivationForm
-from apps.membres.utils import generer_carte_membre_response, envoyer_carte_membre_email, envoyer_confirmation_activation
 
 
 @staff_member_required
