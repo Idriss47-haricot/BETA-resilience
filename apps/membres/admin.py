@@ -220,9 +220,6 @@ class MembreEntiteAdminBase(MembreAdmin):
         qs = super().get_queryset(request)
         return qs.filter(entite=self.entite_code)
 
-    def save_model(self, request, obj, form, change):
-        obj.entite = self.entite_code
-        super().save_model(request, obj, form, change)
 
     def get_list_filter(self, request):
         return [f for f in self.list_filter if f != 'entite']
@@ -299,9 +296,6 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
     
     readonly_fields = ('date_soumission', 'date_traitement')
     
-    def nom_complet(self, obj):
-        return f'{obj.prenom} {obj.nom}'
-    nom_complet.short_description = 'Demandeur'
     
     def get_statut_badge(self, obj):
         colors = {
@@ -427,26 +421,6 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
         self.message_user(request, f'✅ {count} invitation(s) renvoyée(s).')
     renvoyer_invitations.short_description = '📧 Renvoyer l\'invitation'
     
-    def exporter_csv(self, request, queryset):
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="demandes_adhesion.csv"'
-        
-        writer = csv.writer(response)
-        writer.writerow(['Nom', 'Prénom', 'Email', 'Téléphone', 'Profession', 'Statut', 'Date de soumission'])
-        
-        for demande in queryset:
-            writer.writerow([
-                demande.nom,
-                demande.prenom,
-                demande.email,
-                demande.telephone,
-                demande.profession,
-                demande.get_statut_display(),
-                demande.date_soumission.strftime('%d/%m/%Y %H:%M')
-            ])
-        
-        return response
-    exporter_csv.short_description = '📊 Exporter les demandes en CSV'
     
     def save_model(self, request, obj, form, change):
         old_statut = None
@@ -542,30 +516,8 @@ class HistoriqueEmailAdmin(admin.ModelAdmin):
         )
     get_type_email_badge.short_description = 'Type'
     
-    def get_statut_badge(self, obj):
-        colors = {
-            'envoye': '#2E7D32',
-            'erreur': '#C62828',
-            'en_attente': '#FFA000',
-        }
-        labels = {
-            'envoye': '✅ Envoyé',
-            'erreur': '❌ Erreur',
-            'en_attente': '⏳ En attente',
-        }
-        return format_html(
-            '<span style="background:{};color:white;padding:3px 12px;border-radius:12px;font-size:11px;">{}</span>',
-            colors.get(obj.statut, '#757575'),
-            labels.get(obj.statut, obj.statut)
-        )
-    get_statut_badge.short_description = 'Statut'
     
-    def get_membre_lien(self, obj):
-        if obj.membre:
-            url = reverse('admin:membres_membre_change', args=[obj.membre.id])
-            return format_html('<a href="{}" target="_blank">👤 Voir</a>', url)
-        return '-'
-    get_membre_lien.short_description = 'Membre'
+    
     
     def get_demande_lien(self, obj):
         if obj.demande:
@@ -576,22 +528,4 @@ class HistoriqueEmailAdmin(admin.ModelAdmin):
     
     actions = ['exporter_csv']
     
-    def exporter_csv(self, request, queryset):
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="historique_emails.csv"'
-        
-        writer = csv.writer(response)
-        writer.writerow(['Date', 'Type', 'Destinataire', 'Sujet', 'Statut', 'Admin'])
-        
-        for email in queryset:
-            writer.writerow([
-                email.date_envoi.strftime('%d/%m/%Y %H:%M'),
-                email.get_type_email_display(),
-                email.destinataire,
-                email.sujet,
-                email.get_statut_display(),
-                email.admin_nom
-            ])
-        
-        return response
-    exporter_csv.short_description = '📊 Exporter l\'historique en CSV'
+   
