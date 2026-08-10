@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.http import HttpResponse
-
+from apps.demandes.models import Demande
 from apps.membres.models import Membre, Fonction, DemandeAdhesion
 
 from apps.membres.utils import generer_carte_membre_response, envoyer_carte_membre_email
