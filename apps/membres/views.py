@@ -8,27 +8,29 @@ from django.views.generic import (
 )
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import EmailMessage
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
-from django.http import HttpResponse
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.views import LoginView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 from apps.demandes.models import Demande
 from apps.membres.models import Membre, Fonction, DemandeAdhesion
-
 from apps.membres.utils import generer_carte_membre_response, envoyer_carte_membre_email
-from apps.membres.forms import ProfilMembreForm, MembreRegistrationForm
-from django.views.generic import UpdateView
-from django.shortcuts import resolve_url
-from django.contrib.admin.views.decorators import staff_member_required
-from apps.membres.forms import DemandeAdhesionForm, ActivationForm
+from apps.membres.forms import (
+    ProfilMembreForm, MembreRegistrationForm, 
+    DemandeAdhesionForm, ActivationForm
+)
+from apps.evenements.models import InscriptionEvenement
+from apps.notifications.models import Notification
 
 
 @staff_member_required
 def admin_dashboard(request):
-    # On vérifie ici les permissions spécifiques de l'admin connecté
     can_delete_members = request.user.has_perm('membres.delete_membre')
     can_add_members = request.user.has_perm('membres.add_membre')
     can_change_members = request.user.has_perm('membres.change_membre')
@@ -39,6 +41,7 @@ def admin_dashboard(request):
         'can_change_members': can_change_members,
     }
     return render(request, 'membres/admin_dashboard.html', context)
+
 
 @method_decorator(login_required, name='dispatch')
 class DashboardView(TemplateView):
@@ -64,19 +67,15 @@ class DashboardView(TemplateView):
             )
 
         context['membre'] = membre
-
-        from apps.demandes.models import Demande
         context['demandes'] = Demande.objects.filter(email=self.request.user.email).order_by('-date_soumission')
 
-        from apps.evenements.models import InscriptionEvenement
         context['inscriptions'] = InscriptionEvenement.objects.filter(
             utilisateur=self.request.user,
             evenement__statut='a_venir'
         ).select_related('evenement').order_by('evenement__date_debut')
 
-        from apps.notifications.models import Notification
         context['notifications'] = Notification.objects.filter(
-            utilisateur=self.request.user,
+            membre=membre,
             est_lue=False
         ).order_by('-date_creation')
         context['notifications_non_lues'] = context['notifications'].count()
@@ -85,20 +84,39 @@ class DashboardView(TemplateView):
 
 
 @method_decorator(login_required, name='dispatch')
-class ProfilView(TemplateView):
+class ProfilView(UpdateView):
     """
-    Page de profil du membre
+    Page de profil du membre avec modification
     """
+    model = Membre
+    form_class = ProfilMembreForm
     template_name = 'membres/profil.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        try:
-            membre = self.request.user.profil_membre
-            context['membre'] = membre
-        except:
-            context['membre'] = None
-        return context
+    success_url = reverse_lazy('membres:profil')
+
+    def get_object(self, queryset=None):
+        return Membre.objects.filter(user=self.request.user).first()
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object is None:
+            messages.info(request, "Aucune fiche membre n'est associée à votre compte. Contactez un administrateur.")
+            return redirect('/')
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object is None:
+            messages.error(request, "Aucune fiche membre n'est associée à votre compte.")
+            return redirect('/')
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        messages.success(self.request, '✅ Vos informations ont été mises à jour avec succès !')
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, '❌ Veuillez corriger les erreurs ci-dessous.')
+        return super().form_invalid(form)
 
 
 @method_decorator(login_required, name='dispatch')
@@ -110,9 +128,7 @@ class MesDemandesView(ListView):
     context_object_name = 'demandes'
     
     def get_queryset(self):
-        from apps.demandes.models import Demande
         return Demande.objects.filter(email=self.request.user.email).order_by('-date_soumission')
-    
 
 
 class ActivationView(FormView):
@@ -129,7 +145,6 @@ class ActivationView(FormView):
             messages.error(request, '❌ Token d\'activation manquant.')
             return redirect('core:accueil')
         
-        # Vérifier le token
         try:
             membre = Membre.objects.get(token_activation=token)
             if not membre.verifier_token_activation(token):
@@ -143,7 +158,6 @@ class ActivationView(FormView):
             messages.error(request, '❌ Token invalide.')
             return redirect('core:accueil')
         
-        # Stocker le token dans la session
         request.session['activation_token'] = token
         return super().get(request, *args, **kwargs)
     
@@ -167,22 +181,18 @@ class ActivationView(FormView):
         try:
             membre = Membre.objects.get(token_activation=token)
             
-            # Vérifier que le token est encore valide
             if not membre.verifier_token_activation(token):
                 messages.error(self.request, '⏰ Le lien d\'activation a expiré.')
                 return redirect('core:accueil')
             
-            # Créer l'utilisateur
             username = form.cleaned_data['username']
             password = form.cleaned_data['password1']
             email = form.cleaned_data['email']
             
-            # Vérifier que le nom d'utilisateur n'existe pas
             if User.objects.filter(username=username).exists():
                 form.add_error('username', 'Ce nom d\'utilisateur est déjà pris.')
                 return self.form_invalid(form)
             
-            # Créer l'utilisateur
             user = User.objects.create_user(
                 username=username,
                 email=email,
@@ -192,20 +202,15 @@ class ActivationView(FormView):
                 is_active=True,
             )
             
-            # Activer le membre
             membre.activer_compte(user)
             
-            # Supprimer le token de la session
-            del self.request.session['activation_token']
-            
-            # Envoyer email de confirmation
-            envoyer_confirmation_activation(membre)
+            if 'activation_token' in self.request.session:
+                del self.request.session['activation_token']
             
             messages.success(
                 self.request, 
                 '✅ Votre compte a été activé avec succès ! Vous pouvez maintenant vous connecter.'
             )
-            
             return super().form_valid(form)
             
         except Membre.DoesNotExist:
@@ -265,15 +270,14 @@ class AdhesionView(CreateView):
     success_url = reverse_lazy('membres:adhesion_succes')
     
     def form_valid(self, form):
-        # Sauvegarder la demande
         response = super().form_valid(form)
         
-        # Envoyer un email de confirmation au demandeur
+        # Email au demandeur
         try:
-            sujet = f'Confirmation de votre demande d\'adhésion - BETA-Résilience'
+            sujet = f"Confirmation de votre demande d'adhésion - {getattr(settings, 'SITE_NAME', 'BETA-Résilience')}"
             message_html = render_to_string('membres/email_confirmation_adhesion.html', {
                 'demande': form.instance,
-                'site_name': settings.SITE_NAME,
+                'site_name': getattr(settings, 'SITE_NAME', 'BETA-Résilience'),
             })
             
             email = EmailMessage(
@@ -281,39 +285,36 @@ class AdhesionView(CreateView):
                 message_html,
                 settings.DEFAULT_FROM_EMAIL,
                 [form.instance.email],
-                reply_to=[settings.CONTACT_EMAIL],
+                reply_to=[getattr(settings, 'CONTACT_EMAIL', settings.DEFAULT_FROM_EMAIL)],
             )
             email.content_subtype = 'html'
             email.send(fail_silently=True)
         except Exception as e:
             print(f"Erreur d'envoi d'email: {e}")
-            pass
         
-        # Envoyer une notification à l'administrateur
+        # Email aux admins
         try:
-            sujet_admin = f'Nouvelle demande d\'adhésion - {form.instance.prenom} {form.instance.nom}'
+            sujet_admin = f"Nouvelle demande d'adhésion - {form.instance.prenom} {form.instance.nom}"
             message_admin = render_to_string('membres/email_notification_admin.html', {
                 'demande': form.instance,
-                'site_name': settings.SITE_NAME,
-                'admin_url': settings.ADMIN_URL,
+                'site_name': getattr(settings, 'SITE_NAME', 'BETA-Résilience'),
+                'admin_url': getattr(settings, 'ADMIN_URL', '/admin/'),
             })
             
             email_admin = EmailMessage(
                 sujet_admin,
                 message_admin,
                 settings.DEFAULT_FROM_EMAIL,
-                [settings.CONTACT_EMAIL],
+                [getattr(settings, 'CONTACT_EMAIL', settings.DEFAULT_FROM_EMAIL)],
             )
             email_admin.content_subtype = 'html'
             email_admin.send(fail_silently=True)
         except Exception as e:
             print(f"Erreur d'envoi d'email admin: {e}")
-            pass
         
         messages.success(
             self.request, 
-            'Votre demande d\'adhésion a été envoyée avec succès. '
-            'Vous recevrez une confirmation par email dans les plus brefs délais.'
+            "Votre demande d'adhésion a été envoyée avec succès. Vous recevrez une confirmation par email dans les plus brefs délais."
         )
         return response
     
@@ -334,9 +335,8 @@ def telecharger_carte_membre(request, slug):
     """
     membre = get_object_or_404(Membre, slug=slug)
     
-    # Vérifier que l'utilisateur est le propriétaire de la carte
     if request.user.id != membre.user_id and not request.user.is_superuser:
-        messages.error(request, 'Vous n\'êtes pas autorisé à télécharger cette carte.')
+        messages.error(request, "Vous n'êtes pas autorisé à télécharger cette carte.")
         return redirect('membres:detail', slug=membre.slug)
     
     return generer_carte_membre_response(membre)
@@ -350,14 +350,14 @@ def envoyer_carte_membre(request, slug):
     membre = get_object_or_404(Membre, slug=slug)
     
     if request.user.id != membre.user_id and not request.user.is_superuser:
-        messages.error(request, 'Vous n\'êtes pas autorisé à envoyer cette carte.')
+        messages.error(request, "Vous n'êtes pas autorisé à envoyer cette carte.")
         return redirect('membres:detail', slug=membre.slug)
     
     try:
         envoyer_carte_membre_email(membre)
         messages.success(request, f'La carte de membre a été envoyée à {membre.email}.')
     except Exception as e:
-        messages.error(request, 'Une erreur est survenue lors de l\'envoi de la carte.')
+        messages.error(request, "Une erreur est survenue lors de l'envoi de la carte.")
     
     return redirect('membres:detail', slug=membre.slug)
 
@@ -377,10 +377,7 @@ class MembreInscriptionView(CreateView):
             'Votre compte a été créé avec succès. Vous pouvez maintenant vous connecter.'
         )
         return response
-    
 
-from django.contrib.auth.views import LoginView
-from django.contrib.auth.mixins import LoginRequiredMixin
 
 class MembreLoginView(LoginView):
     template_name = 'registration/login.html'
@@ -392,45 +389,7 @@ class MembreLoginView(LoginView):
         return '/membres/dashboard/'
     
     def get_redirect_url(self):
-        # Ignorer le paramètre ?next= et forcer notre redirection
         return None
-
-    
-
-class ProfilView(UpdateView):
-    """
-    Page de profil du membre avec modification
-    """
-    model = Membre
-    form_class = ProfilMembreForm
-    template_name = 'membres/profil.html'
-    success_url = reverse_lazy('membres:profil')
-
-    def get_object(self, queryset=None):
-        # Récupère le Membre lié à l'utilisateur connecté (ou None s'il n'existe pas)
-        return Membre.objects.filter(user=self.request.user).first()
-
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if self.object is None:
-            messages.info(request, "Aucune fiche membre n'est associée à votre compte. Contactez un administrateur.")
-            return redirect('/')
-        return super().get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if self.object is None:
-            messages.error(request, "Aucune fiche membre n'est associée à votre compte.")
-            return redirect('/')
-        return super().post(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        messages.success(self.request, '✅ Vos informations ont été mises à jour avec succès !')
-        return super().form_valid(form)
-
-    def form_invalid(self, form):
-        messages.error(self.request, '❌ Veuillez corriger les erreurs ci-dessous.')
-        return super().form_invalid(form)
 
 
 class MaDemandeDetailView(LoginRequiredMixin, DetailView):
