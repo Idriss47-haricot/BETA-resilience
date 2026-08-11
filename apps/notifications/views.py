@@ -3,6 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.contrib.auth import get_user_model
+from django.db.models import Q
+from .models import MessagePrive
+
+User = get_user_model()
 
 
 @login_required
@@ -63,31 +68,47 @@ def messagerie_admin(request, membre_id=None):
         'fil_messages': fil_messages,
     })
 
-
 @login_required
 def messagerie_membre(request):
-    try:
-        membre = Membre.objects.get(user=request.user)
-    except Membre.DoesNotExist:
-        django_messages.error(request, "Aucune fiche membre associée à votre compte.")
-        return redirect('membres:dashboard')
+    # 1. Obtenir la liste de tous les autres membres (exclure l'utilisateur actuel)
+    membres = User.objects.exclude(id=request.user.id)
+    
+    # 2. Récupérer l'ID du membre sélectionné (s'il existe)
+    membre_selectionne_id = request.GET.get('membre_id') or request.POST.get('membre_id')
+    membre_selectionne = None
+    conversation = []
 
-    fil_messages = MessagePrive.objects.filter(membre=membre)
-    fil_messages.filter(expediteur__is_staff=True).update(lu_par_membre=True)
+    if membre_selectionne_id:
+        membre_selectionne = get_object_or_404(User, id=membre_selectionne_id)
 
-    if request.method == 'POST':
-        contenu = request.POST.get('contenu', '').strip()
-        fichier = request.FILES.get('fichier')
-        if contenu or fichier:
-            MessagePrive.objects.create(
-                membre=membre,
-                expediteur=request.user,
-                contenu=contenu,
-                fichier=fichier,
-            )
-            return redirect('notifications:messagerie_membre')
+        # Envoi d'un nouveau message
+        if request.method == 'POST':
+            contenu = request.POST.get('contenu')
+            if contenu:
+                MessagePrive.objects.create(
+                    expediteur=request.user,
+                    membre=membre_selectionne,  # Ou destinataire=membre_selectionne selon ton modèle
+                    contenu=contenu,
+                    objet=request.POST.get('objet', 'Sans objet')
+                )
+                return redirect(f"{request.path}?membre_id={membre_selectionne.id}")
 
-    return render(request, 'notifications/messagerie_membre.html', {
-        'membre': membre,
-        'fil_messages': fil_messages,
-    })
+        # 3. Charger les messages échangés entre les deux membres
+        conversation = MessagePrive.objects.filter(
+            (Q(expediteur=request.user) & Q(membre=membre_selectionne)) |
+            (Q(expediteur=membre_selectionne) & Q(membre=request.user))
+        ).order_by('date_envoi')
+
+        # Marquer comme lus les messages reçus de ce membre
+        MessagePrive.objects.filter(
+            expediteur=membre_selectionne, 
+            membre=request.user, 
+            lu_par_membre=False
+        ).update(lu_par_membre=True)
+
+    context = {
+        'membres': membres,
+        'membre_selectionne': membre_selectionne,
+        'conversation': conversation,
+    }
+    return render(request, 'notifications/messagerie_membre.html', context)
