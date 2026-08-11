@@ -1,5 +1,6 @@
 from django.urls import path
 from apps.membres import views
+from apps.membres.views import MaDemandeDetailView
 
 app_name = 'membres'
 
