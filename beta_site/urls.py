@@ -11,6 +11,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth import views as auth_views
 from apps.core.views import redirect_after_login 
 from apps.membres.views import MembreLoginView
+from vos_views import MaDemandeDetailView 
 
 
 # ✅ IMPORT DU ADMIN PERSONNALISÉ
