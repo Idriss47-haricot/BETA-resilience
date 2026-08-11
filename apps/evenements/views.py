@@ -7,6 +7,39 @@ from django.utils import timezone
 from django.contrib import messages
 from apps.evenements.models import Evenement, InscriptionEvenement
 from apps.notifications.models import Notification
+from django.shortcuts import redirect, get_object_or_404
+from apps.membres.models import Membre
+from apps.notifications.models import MessagePrive
+from .models import Evenement, InscriptionEvenement
+
+@login_required
+def inscrire_evenement(request, evenement_id):
+    evenement = get_object_or_404(Evenement, pk=evenement_id)
+    membre_actuel, _ = Membre.objects.get_or_create(user=request.user)
+
+    # Création de l'inscription
+    inscription, created = InscriptionEvenement.objects.get_or_create(
+        evenement=evenement,
+        membre=membre_actuel
+    )
+
+    if created:
+        messages.success(request, "Votre inscription à l'événement a bien été prise en compte.")
+
+        # Notification à tous les administrateurs
+        admins = Membre.objects.filter(user__is_staff=True)
+        contenu_notification = f"Le membre {membre_actuel.nom} {membre_actuel.prenom} s'est inscrit à l'événement '{evenement.titre}'."
+
+        for admin in admins:
+            MessagePrive.objects.create(
+                expediteur=request.user,
+                membre=admin,
+                contenu=contenu_notification
+            )
+    else:
+        messages.info(request, "Vous êtes déjà inscrit à cet événement.")
+
+    return redirect('evenements:detail', evenement_id=evenement.id)
 
 
 def liste(request):
