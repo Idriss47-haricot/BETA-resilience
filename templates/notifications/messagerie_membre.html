@@ -1,50 +1,52 @@
-{% extends 'core/base.html' %}
-{% block title %}Mes messages{% endblock %}
-{% block content %}
-<section class="py-4">
-    <div class="container">
-        <h1 class="text-success mb-4"><i class="fas fa-comments me-2"></i> Mes messages avec l'administration</h1>
-        <div class="card border-0 shadow-sm">
-            <div class="card-body" style="max-height: 450px; overflow-y: auto;">
-                {% for msg in fil_messages %}
-                <div class="mb-3 {% if not msg.est_message_admin %}text-end{% endif %}">
-                    <div class="d-inline-block p-2 rounded {% if not msg.est_message_admin %}bg-success text-white{% else %}bg-light{% endif %}" style="max-width: 75%;">
-                        {% if msg.contenu %}<div>{{ msg.contenu|linebreaksbr }}</div>{% endif %}
-                        {% if msg.fichier %}
-                            {% if msg.est_video %}
-                            <video controls class="w-100 mt-2" style="max-height: 250px;">
-                                <source src="{{ msg.fichier.url }}">
-                            </video>
-                            {% elif msg.est_image %}
-                            <img src="{{ msg.fichier.url }}" class="img-fluid mt-2 rounded" alt="Pièce jointe">
-                            {% else %}
-                            <a href="{{ msg.fichier.url }}" target="_blank" class="d-block mt-2">
-                                <i class="fas fa-paperclip me-1"></i> Fichier joint
-                            </a>
-                            {% endif %}
-                        {% endif %}
-                        <small class="d-block mt-1 opacity-75">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
-                    </div>
-                </div>
-                {% empty %}
-                <p class="text-muted">Aucun message pour l'instant. L'administration peut vous contacter ici, et vous pouvez répondre.</p>
-                {% endfor %}
-            </div>
-            <div class="card-footer bg-white">
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="mb-2">
-                        <textarea name="contenu" class="form-control" rows="2" placeholder="Votre message..."></textarea>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <input type="file" name="fichier" class="form-control form-control-sm w-50">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-paper-plane me-1"></i> Envoyer
-                        </button>
-                    </div>
-                </form>
-            </div>
+<div class="row">
+    <!-- Colonne 1 : Sélection du destinataire -->
+    <div class="col-md-4">
+        <h5>Choisir un membre</h5>
+        <div class="list-group">
+            {% for m in membres %}
+                <a href="?membre_id={{ m.id }}" 
+                   class="list-group-item list-group-item-action {% if membre_selectionne and membre_selectionne.id == m.id %}active{% endif %}">
+                    {{ m.get_full_name|default:m.username }}
+                </a>
+            {% empty %}
+                <p class="text-muted">Aucun membre disponible.</p>
+            {% endfor %}
         </div>
     </div>
-</section>
-{% endblock %}
+
+    <!-- Colonne 2 : Zone de conversation -->
+    <div class="col-md-8">
+        {% if membre_selectionne %}
+            <h5>Discussion avec {{ membre_selectionne.get_full_name|default:membre_selectionne.username }}</h5>
+            
+            <!-- Historique des messages -->
+            <div class="chat-box style-scroll mb-3" style="height: 350px; overflow-y: auto; border: 1px solid #ddd; padding: 15px;">
+                {% for msg in conversation %}
+                    <div class="mb-2 {% if msg.expediteur == request.user %}text-end{% else %}text-start{% endif %}">
+                        <div class="d-inline-block p-2 rounded {% if msg.expediteur == request.user %}bg-primary text-white{% else %}bg-light text-dark{% endif %}">
+                            <p class="mb-0">{{ msg.contenu }}</p>
+                            <small style="font-size: 0.75rem;" class="opacity-75">{{ msg.date_envoi|date:"H:i" }}</small>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted text-center">Aucun message échangé pour le moment. Envoyez le premier message !</p>
+                {% endfor %}
+            </div>
+
+            <!-- Formulaire d'envoi -->
+            <form method="post" action="?membre_id={{ membre_selectionne.id }}">
+                {% csrf_token %}
+                <input type="hidden" name="membre_id" value="{{ membre_selectionne.id }}">
+                <div class="input-group">
+                    <input type="text" name="contenu" class="form-control" placeholder="Écrivez votre message..." required>
+                    <button class="btn btn-primary" type="submit">Envoyer</button>
+                </div>
+            </form>
+        {% else %}
+            <!-- Message par défaut avant de sélectionner un membre -->
+            <div class="alert alert-info text-center mt-4">
+                Veuillez sélectionner un membre à gauche pour démarrer une conversation.
+            </div>
+        {% endif %}
+    </div>
+</div>
