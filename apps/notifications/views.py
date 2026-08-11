@@ -47,8 +47,7 @@ def messagerie_admin(request, membre_id=None):
                     membre=membre_selectionne,
                     expediteur=request.user,
                     contenu=contenu,
-                    fichier=fichier,
-                    objet="Sans objet"
+                    fichier=fichier
                 )
                 messages.success(request, 'Message envoyé.')
                 return redirect('notifications:messagerie_admin_membre', membre_id=membre_selectionne.id)
@@ -84,8 +83,7 @@ def messagerie_membre(request):
                     expediteur=request.user,
                     membre=membre_selectionne,
                     contenu=contenu,
-                    fichier=fichier,
-                    objet=request.POST.get('objet', 'Sans objet')
+                    fichier=fichier
                 )
                 return redirect(f"{request.path}?membre_id={membre_selectionne.id}")
 
