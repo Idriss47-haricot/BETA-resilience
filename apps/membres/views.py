@@ -74,8 +74,9 @@ class DashboardView(TemplateView):
             evenement__statut='a_venir'
         ).select_related('evenement').order_by('evenement__date_debut')
 
+        
         context['notifications'] = Notification.objects.filter(
-            membre=membre,
+            utilisateur=self.request.user,
             est_lue=False
         ).order_by('-date_creation')
         context['notifications_non_lues'] = context['notifications'].count()
