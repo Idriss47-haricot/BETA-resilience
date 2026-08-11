@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Q
-from .models import MessagePrive
+from .models import MessagePrive, Notification
 from apps.membres.models import Membre
 
 
@@ -44,12 +44,22 @@ def messagerie_admin(request, membre_id=None):
             contenu = request.POST.get('contenu', '').strip()
             fichier = request.FILES.get('fichier')
             if contenu or fichier:
+                # 1. Création du message privé
                 MessagePrive.objects.create(
                     membre=membre_selectionne,
                     expediteur=request.user,
                     contenu=contenu,
                     fichier=fichier
                 )
+                
+                # 2. Création de la notification pour le membre destinataire
+                Notification.objects.create(
+                    membre=membre_selectionne,
+                    titre="Nouveau message de l'administration",
+                    message=f"L'administration vous a envoyé un message : '{contenu[:50]}...'" if contenu else "L'administration vous a envoyé un fichier.",
+                    type_notif='message'
+                )
+
                 messages.success(request, 'Message envoyé.')
                 return redirect('notifications:messagerie_admin_membre', membre_id=membre_selectionne.id)
 
@@ -62,7 +72,7 @@ def messagerie_admin(request, membre_id=None):
 
 @login_required
 def messagerie_membre(request):
-    # Récupérer ou créer l'instance Membre liée à l'utilisateur actuel pour éviter une erreur 404
+    # Récupérer ou créer l'instance Membre liée à l'utilisateur actuel
     membre_actuel, _ = Membre.objects.get_or_create(user=request.user)
 
     # Obtenir la liste de TOUS les autres membres (peu importe leur statut), en excluant soi-même
@@ -80,12 +90,23 @@ def messagerie_membre(request):
             contenu = request.POST.get('contenu', '').strip()
             fichier = request.FILES.get('fichier')
             if contenu or fichier:
+                # 1. Création du message
                 MessagePrive.objects.create(
                     expediteur=request.user,
                     membre=membre_selectionne,
                     contenu=contenu,
                     fichier=fichier
                 )
+
+                # 2. Notification envoyée au destinataire
+                nom_expediteur = request.user.get_full_name() or request.user.username
+                Notification.objects.create(
+                    membre=membre_selectionne,
+                    titre="Nouveau message privé",
+                    message=f"Vous avez reçu un message de {nom_expediteur}.",
+                    type_notif='message'
+                )
+
                 return redirect(f"{request.path}?membre_id={membre_selectionne.id}")
 
         # Charger la conversation (fil d'échange entre les deux membres)
@@ -94,7 +115,7 @@ def messagerie_membre(request):
             (Q(expediteur=membre_selectionne.user) & Q(membre=membre_actuel))
         ).order_by('date_envoi')
 
-        # Marquer les messages reçus comme lus
+        # Marquer les messages reçus comme lus dans le fil de discussion
         MessagePrive.objects.filter(
             expediteur=membre_selectionne.user,
             membre=membre_actuel,
