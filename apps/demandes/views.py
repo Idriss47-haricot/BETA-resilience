@@ -15,7 +15,60 @@ from apps.demandes.forms import DemandeForm
 
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
+from .forms import DemandeForm
+from .models import Demande
+from apps.membres.models import Membre
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
 
+
+@login_required
+def soumettre_demande(request):
+    """
+    Vue permettant à un membre de soumettre une nouvelle demande.
+    """
+    membre_actuel, _ = Membre.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        # Cas 1 : Si vous utilisez un Django Form / ModelForm
+        form = DemandeForm(request.POST, request.FILES)
+        if form.is_valid():
+            demande = form.save(commit=False)
+            demande.membre = membre_actuel
+            demande.save()
+            messages.success(request, "Votre demande a été soumise avec succès.")
+            return redirect('demandes:liste')  # Redirige vers la liste des demandes
+        
+        # Cas 2 : Si vous n'utilisez pas de Form Django mais de simples champs HTML
+        """
+        titre = request.POST.get('titre', '').strip()
+        description = request.POST.get('description', '').strip()
+        fichier = request.FILES.get('fichier')
+
+        if titre and description:
+            Demande.objects.create(
+                membre=membre_actuel,
+                titre=titre,
+                description=description,
+                fichier=fichier
+            )
+            messages.success(request, "Votre demande a été soumise avec succès.")
+            return redirect('demandes:liste')
+        else:
+            messages.error(request, "Veuillez remplir tous les champs obligatoires.")
+        """
+    else:
+        form = DemandeForm()
+
+    context = {
+        'form': form,
+        'membre': membre_actuel,
+    }
+
+    # Assurez-vous que le fichier templates/demandes/demande_page.html existe bien,
+    # OU renommez le template ici selon vos fichiers réels (ex: 'demandes/soumettre.html')
+    return render(request, 'demandes/demande_page.html', context)
+    
 
 class AccueilView(TemplateView):
     """
