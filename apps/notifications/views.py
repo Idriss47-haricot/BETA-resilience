@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from .models import MessagePrive
+from apps.comptes.models import Membre
 
 User = get_user_model()
 
