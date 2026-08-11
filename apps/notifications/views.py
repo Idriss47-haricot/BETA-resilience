@@ -28,7 +28,8 @@ def preferences(request):
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def messagerie_admin(request, membre_id=None):
-    membres = Membre.objects.filter(est_actif=True).order_by('nom', 'prenom')
+    # Tous les membres sont affichés (sans restriction sur est_actif)
+    membres = Membre.objects.all().order_by('nom', 'prenom')
     membre_selectionne = None
     fil_messages = []
 
@@ -61,11 +62,11 @@ def messagerie_admin(request, membre_id=None):
 
 @login_required
 def messagerie_membre(request):
-    # Récupérer l'instance Membre liée à l'utilisateur actuel
-    membre_actuel = get_object_or_404(Membre, user=request.user)
+    # Récupérer ou créer l'instance Membre liée à l'utilisateur actuel pour éviter une erreur 404
+    membre_actuel, _ = Membre.objects.get_or_create(user=request.user)
 
-    # Obtenir la liste de tous les autres membres actifs
-    membres = Membre.objects.filter(est_actif=True).exclude(id=membre_actuel.id).order_by('nom', 'prenom')
+    # Obtenir la liste de TOUS les autres membres (peu importe leur statut), en excluant soi-même
+    membres = Membre.objects.exclude(id=membre_actuel.id).order_by('nom', 'prenom')
 
     membre_selectionne_id = request.GET.get('membre_id') or request.POST.get('membre_id')
     membre_selectionne = None
@@ -93,7 +94,7 @@ def messagerie_membre(request):
             (Q(expediteur=membre_selectionne.user) & Q(membre=membre_actuel))
         ).order_by('date_envoi')
 
-        # Marquer comme lus
+        # Marquer les messages reçus comme lus
         MessagePrive.objects.filter(
             expediteur=membre_selectionne.user,
             membre=membre_actuel,
