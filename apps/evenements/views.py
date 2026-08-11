@@ -40,12 +40,13 @@ def inscrire_evenement(request, evenement_id):
                 membre=admin,
                 contenu=contenu_notif
             )
-            Notification.objects.create(
-                membre=admin,
-                titre="Nouvelle inscription à un événement",
-                message=contenu_notif,
-                type_notif='evenement'
-            )
+            if hasattr(admin, 'user') and admin.user:
+                Notification.objects.create(
+                    utilisateur=admin.user,
+                    titre="Nouvelle inscription à un événement",
+                    message=contenu_notif,
+                    type='evenement'
+                )
     else:
         messages.info(request, "Vous êtes déjà inscrit à cet événement.")
 
@@ -92,12 +93,11 @@ def mes_evenements(request):
     """Espace membre : événements à venir + inscriptions du membre"""
 
     # Marquer les notifications d'événements comme lues
-    membre_actuel, _ = Membre.objects.get_or_create(user=request.user)
     Notification.objects.filter(
-        membre=membre_actuel,
-        type_notif='evenement',
+        utilisateur=request.user,
+        type='evenement',
         est_lue=False,
-    ).update(est_lue=True)
+    ).update(est_lue=True, date_lecture=timezone.now())
 
     # Tous les événements publiés à venir
     evenements_a_venir = Evenement.objects.filter(
@@ -155,12 +155,13 @@ def s_inscrire(request, slug):
                 membre=admin,
                 contenu=contenu_notif
             )
-            Notification.objects.create(
-                membre=admin,
-                titre="Nouvelle inscription à un événement",
-                message=contenu_notif,
-                type_notif='evenement'
-            )
+            if hasattr(admin, 'user') and admin.user:
+                Notification.objects.create(
+                    utilisateur=admin.user,
+                    titre="Nouvelle inscription à un événement",
+                    message=contenu_notif,
+                    type='evenement'
+                )
     else:
         messages.info(request, 'ℹ️ Vous êtes déjà inscrit à cet événement.')
 
