@@ -75,7 +75,7 @@ def messagerie_membre(request):
     # Récupérer ou créer l'instance Membre liée à l'utilisateur actuel
     membre_actuel, _ = Membre.objects.get_or_create(user=request.user)
 
-    # Obtenir la liste de TOUS les autres membres (peu importe leur statut), en excluant soi-même
+    # Obtenir la liste de TOUS les autres membres, en excluant soi-même
     membres = Membre.objects.exclude(id=membre_actuel.id).order_by('nom', 'prenom')
 
     membre_selectionne_id = request.GET.get('membre_id') or request.POST.get('membre_id')
@@ -98,29 +98,37 @@ def messagerie_membre(request):
                     fichier=fichier
                 )
 
-                # 2. Notification envoyée au destinataire
-                nom_expediteur = request.user.get_full_name() or request.user.username
-                Notification.objects.create(
-                    membre=membre_selectionne,
-                    titre="Nouveau message privé",
-                    message=f"Vous avez reçu un message de {nom_expediteur}.",
-                    type_notif='message'
-                )
+                # 2. Notification envoyée au destinataire (Correction ici)
+                if hasattr(membre_selectionne, 'user') and membre_selectionne.user:
+                    nom_expediteur = request.user.get_full_name() or request.user.username
+                    Notification.objects.create(
+                        utilisateur=membre_selectionne.user,
+                        titre="Nouveau message privé",
+                        message=f"Vous avez reçu un message de {nom_expediteur}.",
+                        type='message',
+                        lien=f"/notifications/mes-messages/?membre_id={membre_actuel.id}"
+                    )
 
                 return redirect(f"{request.path}?membre_id={membre_selectionne.id}")
 
         # Charger la conversation (fil d'échange entre les deux membres)
-        conversation = MessagePrive.objects.filter(
-            (Q(expediteur=request.user) & Q(membre=membre_selectionne)) |
-            (Q(expediteur=membre_selectionne.user) & Q(membre=membre_actuel))
-        ).order_by('date_envoi')
+        if membre_selectionne.user:
+            conversation = MessagePrive.objects.filter(
+                (Q(expediteur=request.user) & Q(membre=membre_selectionne)) |
+                (Q(expediteur=membre_selectionne.user) & Q(membre=membre_actuel))
+            ).order_by('date_envoi')
 
-        # Marquer les messages reçus comme lus dans le fil de discussion
-        MessagePrive.objects.filter(
-            expediteur=membre_selectionne.user,
-            membre=membre_actuel,
-            lu_par_membre=False
-        ).update(lu_par_membre=True)
+            # Marquer les messages reçus comme lus dans le fil de discussion
+            MessagePrive.objects.filter(
+                expediteur=membre_selectionne.user,
+                membre=membre_actuel,
+                lu_par_membre=False
+            ).update(lu_par_membre=True)
+        else:
+            conversation = MessagePrive.objects.filter(
+                expediteur=request.user, 
+                membre=membre_selectionne
+            ).order_by('date_envoi')
 
     context = {
         'membres': membres,
