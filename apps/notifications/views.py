@@ -115,7 +115,7 @@ def messagerie_membre(request):
                 # 1. Création du message
                 MessagePrive.objects.create(
                     expediteur=request.user,
-                    membre=membre_selectionne,
+                    membre=membre_selectionne.user,
                     contenu=contenu,
                     fichier=fichier
                 )
