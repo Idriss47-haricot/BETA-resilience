@@ -143,6 +143,7 @@ class MessagePrive(models.Model):
     """
     Message échangé entre l'administration et un membre
     """
+    
     membre = models.ForeignKey(
         'membres.Membre',
         on_delete=models.CASCADE,
