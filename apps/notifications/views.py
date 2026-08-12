@@ -8,13 +8,19 @@ from apps.membres.models import Membre
 
 @login_required
 def liste(request):
-    """Liste des notifications"""
-    return render(request, 'notifications/liste.html')
+    """Liste des notifications de l'utilisateur"""
+    notifications = Notification.objects.filter(utilisateur=request.user).order_by('-date_creation')
+    return render(request, 'notifications/liste.html', {'notifications': notifications})
 
 
 @login_required
 def marquer_toutes_lues(request):
-    """Marquer toutes les notifications comme lues"""
+    """Marquer toutes les notifications non lues comme lues"""
+    Notification.objects.filter(
+        utilisateur=request.user,
+        est_lue=False
+    ).update(est_lue=True)
+    
     messages.success(request, 'Toutes les notifications ont été marquées comme lues.')
     return redirect('notifications:liste')
 
@@ -52,13 +58,16 @@ def messagerie_admin(request, membre_id=None):
                     fichier=fichier
                 )
                 
-                # 2. Création de la notification pour le membre destinataire
-                Notification.objects.create(
-                    membre=membre_selectionne,
-                    titre="Nouveau message de l'administration",
-                    message=f"L'administration vous a envoyé un message : '{contenu[:50]}...'" if contenu else "L'administration vous a envoyé un fichier.",
-                    type_notif='message'
-                )
+                # 2. Création de la notification pour le membre destinataire (Correction ici)
+                if hasattr(membre_selectionne, 'user') and membre_selectionne.user:
+                    msg_text = f"L'administration vous a envoyé un message : '{contenu[:50]}...'" if contenu else "L'administration vous a envoyé un fichier."
+                    Notification.objects.create(
+                        utilisateur=membre_selectionne.user,
+                        titre="Nouveau message de l'administration",
+                        message=msg_text,
+                        type='message',
+                        lien="/notifications/mes-messages/"
+                    )
 
                 messages.success(request, 'Message envoyé.')
                 return redirect('notifications:messagerie_admin_membre', membre_id=membre_selectionne.id)
@@ -98,7 +107,7 @@ def messagerie_membre(request):
                     fichier=fichier
                 )
 
-                # 2. Notification envoyée au destinataire (Correction ici)
+                # 2. Notification envoyée au destinataire
                 if hasattr(membre_selectionne, 'user') and membre_selectionne.user:
                     nom_expediteur = request.user.get_full_name() or request.user.username
                     Notification.objects.create(
