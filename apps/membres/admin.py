@@ -10,6 +10,7 @@ from django.http import HttpResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
+from django.contrib.auth.admin import UserAdmin
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -42,6 +43,19 @@ class FonctionAdmin(admin.ModelAdmin):
     list_filter = ('est_actif',)
     search_fields = ('nom',)
     ordering = ('ordre',)
+
+admin.site.unregister(User)
+
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+
+    def has_delete_permission(self, request, obj=None):
+        # Si on consulte le profil d'un superutilisateur, on retire la permission de supprimer
+        if obj is not None and obj.is_superuser:
+            return False
+        
+        # Pour les autres utilisateurs, garder le comportement normal
+        return super().has_delete_permission(request, obj)
 
 
 @admin.register(Membre, site=admin_site)
