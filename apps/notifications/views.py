@@ -8,9 +8,13 @@ from apps.membres.models import Membre
 
 @login_required
 def liste(request):
-    """Liste des notifications de l'utilisateur"""
     notifications = Notification.objects.filter(utilisateur=request.user).order_by('-date_creation')
-    return render(request, 'notifications/liste.html', {'notifications': notifications})
+    non_lues_count = notifications.filter(est_lue=False).count()
+    
+    return render(request, 'notifications/liste.html', {
+        'notifications': notifications,
+        'non_lues_count': non_lues_count,
+    })
 
 
 @login_required
