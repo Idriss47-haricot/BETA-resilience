@@ -4,6 +4,9 @@ from django.contrib import messages
 from django.db.models import Q
 from .models import MessagePrive, Notification
 from apps.membres.models import Membre
+from django.shortcuts import get_object_or_404, redirect, render
+
+from .models import Membre, MessagePrive, Notification
 
 
 @login_required
@@ -88,15 +91,23 @@ def messagerie_membre(request):
     # Récupérer ou créer l'instance Membre liée à l'utilisateur actuel
     membre_actuel, _ = Membre.objects.get_or_create(user=request.user)
 
-    # Obtenir la liste de TOUS les autres membres, en excluant soi-même
-    membres = Membre.objects.exclude(id=membre_actuel.id).order_by('nom', 'prenom')
+    # Récupérer uniquement les membres qui possèdent un compte User valide
+    membres = (
+        Membre.objects.filter(user__isnull=False)
+        .exclude(id=membre_actuel.id)
+        .select_related('user')
+        .order_by('nom', 'prenom')
+    )
 
     membre_selectionne_id = request.GET.get('membre_id') or request.POST.get('membre_id')
     membre_selectionne = None
     conversation = []
 
     if membre_selectionne_id:
-        membre_selectionne = get_object_or_404(Membre, id=membre_selectionne_id)
+        membre_selectionne = get_object_or_404(
+            Membre.objects.select_related('user'), 
+            id=membre_selectionne_id
+        )
 
         # Envoi d'un nouveau message
         if request.method == 'POST':
@@ -129,9 +140,9 @@ def messagerie_membre(request):
             conversation = MessagePrive.objects.filter(
                 (Q(expediteur=request.user) & Q(membre=membre_selectionne)) |
                 (Q(expediteur=membre_selectionne.user) & Q(membre=membre_actuel))
-            ).order_by('date_envoi')
+            ).select_related('expediteur', 'membre').order_by('date_envoi')
 
-            # Marquer les messages reçus comme lus dans le fil de discussion
+            # Marquer les messages reçus comme lus
             MessagePrive.objects.filter(
                 expediteur=membre_selectionne.user,
                 membre=membre_actuel,
@@ -141,7 +152,7 @@ def messagerie_membre(request):
             conversation = MessagePrive.objects.filter(
                 expediteur=request.user, 
                 membre=membre_selectionne
-            ).order_by('date_envoi')
+            ).select_related('expediteur', 'membre').order_by('date_envoi')
 
     context = {
         'membres': membres,
