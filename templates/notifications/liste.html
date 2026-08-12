@@ -40,9 +40,9 @@
                             <h5 class="mb-0">
                                 <i class="fas fa-bell text-success me-2"></i>
                                 Mes notifications
-                                <span class="badge bg-danger ms-2">{{ notifications|length }}</span>
+                                <span class="badge bg-danger ms-2" id="header-notif-count">{{ non_lues_count }}</span>
                             </h5>
-                            <div>
+                                                        <div>
                                 <a href="{% url 'notifications:marquer_toutes_lues' %}" class="btn btn-outline-secondary btn-sm">
                                     <i class="fas fa-check-double"></i> Tout marquer comme lu
                                 </a>
@@ -103,7 +103,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Marquer une notification comme lue via AJAX
     document.querySelectorAll('.marquer-lue').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const id = this.dataset.id;
@@ -113,26 +112,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // 1. Transformer le style de l'élément lu
                     item.classList.remove('bg-light');
-                    const title = item.querySelector('h6');
-                    if (title) title.classList.remove('fw-bold');
-                    this.remove();
+                    this.remove(); // Supprime le bouton "Marquer comme lu"
                     
-                    // Mettre à jour le badge
-                    const badges = document.querySelectorAll('.badge.bg-danger');
-                    badges.forEach(badge => {
-                        const count = parseInt(badge.textContent) - 1;
-                        if (count > 0) {
-                            badge.textContent = count;
-                        } else {
-                            badge.remove();
-                        }
-                    });
+                    // 2. Mettre à jour le compteur global
+                    const headerBadge = document.getElementById('header-notif-count');
+                    const sidebarBadge = document.getElementById('notif-badge');
+                    
+                    let currentCount = parseInt(headerBadge.textContent || '0');
+                    if (currentCount > 0) {
+                        currentCount--;
+                        if (headerBadge) headerBadge.textContent = currentCount;
+                        if (sidebarBadge) sidebarBadge.textContent = currentCount;
+                    }
                 }
             });
         });
