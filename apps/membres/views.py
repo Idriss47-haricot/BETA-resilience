@@ -18,6 +18,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
+from django.db.models import Q
+from apps.evenements.models import Evenement
 
 from apps.demandes.models import Demande
 from apps.membres.models import Membre, Fonction, DemandeAdhesion
@@ -55,31 +57,53 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
 
+        # 1. Récupération ou création du membre
         membre, _ = Membre.objects.get_or_create(
-            user=self.request.user,
+            user=user,
             defaults={
-                'nom': self.request.user.last_name or 'Nom',
-                'prenom': self.request.user.first_name or 'Prénom',
-                'email': self.request.user.email,
+                'nom': user.last_name or 'Nom',
+                'prenom': user.first_name or 'Prénom',
+                'email': user.email,
                 'est_actif': True,
                 'est_compte_active': True,
             }
         )
-
         context['membre'] = membre
-        context['demandes'] = Demande.objects.filter(email=self.request.user.email).order_by('-date_soumission')
 
-        context['inscriptions'] = InscriptionEvenement.objects.filter(
-            utilisateur=self.request.user,
-            evenement__statut='a_venir'
-        ).select_related('evenement').order_by('evenement__date_debut')
+        # 2. Mes dernières demandes (Recherche large : par utilisateur, par membre OU par email)
+        filters = Q(email__iexact=user.email)
+        if hasattr(Demande, 'user'):
+            filters |= Q(user=user)
+        if hasattr(Demande, 'utilisateur'):
+            filters |= Q(utilisateur=user)
+        if hasattr(Demande, 'membre'):
+            filters |= Q(membre=membre)
 
-        context['notifications'] = Notification.objects.filter(
-            utilisateur=self.request.user,
-            est_lue=False
-        ).order_by('-date_creation')
-        context['notifications_non_lues'] = context['notifications'].count()
+        context['demandes'] = Demande.objects.filter(filters).distinct().order_by('-date_soumission')
+
+        # 3. Mes événements / Événements à venir
+        # Inscriptions de l'utilisateur
+        inscriptions = InscriptionEvenement.objects.filter(
+            Q(utilisateur=user) | Q(membre=membre) if hasattr(InscriptionEvenement, 'membre') else Q(utilisateur=user)
+        ).select_related('evenement')
+
+        context['inscriptions'] = inscriptions.filter(evenement__statut='a_venir').order_by('evenement__date_debut')
+        
+        # Liste directe des événements pour alimenter le widget du template
+        context['evenements'] = [i.evenement for i in context['inscriptions']]
+        context['evenements_a_venir'] = context['evenements']
+
+        # 4. Notifications (Récupère toutes les notifications récentes, pas seulement non lues)
+        notif_filters = Q(utilisateur=user)
+        if hasattr(Notification, 'user'):
+            notif_filters |= Q(user=user)
+        if hasattr(Notification, 'destinataire'):
+            notif_filters |= Q(destinataire=user)
+
+        context['notifications'] = Notification.objects.filter(notif_filters).order_by('-date_creation')[:10]
+        context['notifications_non_lues'] = Notification.objects.filter(notif_filters, est_lue=False).count()
 
         return context
 
