@@ -494,3 +494,56 @@ textarea,
     border-radius: 6px;
     box-sizing: border-box;
 }
+
+/* --- CORRECTION CASSEMENT FORMULAIRE UPLOAD FILE --- */
+
+/* 1. Empêcher tout débordement horizontal dans le formulaire */
+form, .form-group, fieldset {
+    max-width: 100% !important;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+/* 2. Fixer l'alignement vertical des labels et inputs */
+.form-group {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+    margin-bottom: 1rem;
+}
+
+/* 3. Forcer les labels à ne jamais chevaucher les champs */
+.form-group label {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 0.3rem !important;
+    white-space: normal !important;
+    word-break: break-word;
+}
+
+/* 4. Fix spécifique pour le champ File Input (jointure de document) */
+input[type="file"] {
+    max-width: 100% !important;
+    width: 100% !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Affiche "..." si le nom du fichier est trop long */
+    box-sizing: border-box;
+    padding: 6px;
+    background-color: #f8f9fa;
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+}
+
+/* 5. Forcer la largeur de tous les éléments de formulaire */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+select,
+textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: block !important;
+}
