@@ -465,3 +465,32 @@ img {
 .shadow-sm {
     box-shadow: var(--shadow) !important;
 }
+
+/* Correction de l'alignement des formulaires sur mobile */
+.form-group {
+    margin-bottom: 1.2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: #333;
+}
+
+/* Forcer les champs à occuper 100% de la largeur */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+select,
+textarea,
+.form-control {
+    width: 100% !important;
+    max-width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
