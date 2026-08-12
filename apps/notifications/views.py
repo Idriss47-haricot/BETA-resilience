@@ -2,11 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Q
-from .models import MessagePrive, Notification
-from apps.membres.models import Membre
-from django.shortcuts import get_object_or_404, redirect, render
 
-from .models import Membre, MessagePrive, Notification
+from apps.membres.models import Membre
+from .models import MessagePrive, Notification
 
 
 @login_required
@@ -65,7 +63,7 @@ def messagerie_admin(request, membre_id=None):
                     fichier=fichier
                 )
                 
-                # 2. Création de la notification pour le membre destinataire (Correction ici)
+                # 2. Création de la notification pour le membre destinataire
                 if hasattr(membre_selectionne, 'user') and membre_selectionne.user:
                     msg_text = f"L'administration vous a envoyé un message : '{contenu[:50]}...'" if contenu else "L'administration vous a envoyé un fichier."
                     Notification.objects.create(
