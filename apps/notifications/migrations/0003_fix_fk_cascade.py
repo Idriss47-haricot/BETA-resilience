@@ -10,14 +10,14 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunSQL(
             sql="""
-            -- 1. Supprime la contrainte actuelle bloquante
+            -- 1. Supprime la contrainte SQL stricte vers auth_user
             ALTER TABLE notifications_messageprive 
             DROP CONSTRAINT IF EXISTS notifications_messageprive_membre_id_fkey;
 
-            -- 2. Pointe vers la vraie table membres_membre avec ON DELETE CASCADE
+            -- 2. Ré-ajoute la contrainte avec CASCADE
             ALTER TABLE notifications_messageprive 
             ADD CONSTRAINT notifications_messageprive_membre_id_fkey 
-            FOREIGN KEY (membre_id) REFERENCES membres_membre(id) ON DELETE CASCADE;
+            FOREIGN KEY (membre_id) REFERENCES auth_user(id) ON DELETE CASCADE;
             """,
             reverse_sql="""
             ALTER TABLE notifications_messageprive 
