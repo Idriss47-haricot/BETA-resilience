@@ -112,10 +112,10 @@ def messagerie_membre(request):
             contenu = request.POST.get('contenu', '').strip()
             fichier = request.FILES.get('fichier')
             if contenu or fichier:
-                # 1. Création du message
+                # 1. Passer l'instance membre_selectionne (Membre)
                 MessagePrive.objects.create(
                     expediteur=request.user,
-                    membre=membre_selectionne.user,
+                    membre=membre_selectionne,
                     contenu=contenu,
                     fichier=fichier
                 )
