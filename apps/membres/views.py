@@ -1,6 +1,7 @@
 """
 Vues de l'application Membres - Version complète avec gestion des adhésions
 """
+import logging
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import (
     CreateView, DetailView, ListView,
@@ -12,11 +13,11 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseRedirect
 
 from apps.demandes.models import Demande
 from apps.membres.models import Membre, Fonction, DemandeAdhesion
@@ -27,6 +28,8 @@ from apps.membres.forms import (
 )
 from apps.evenements.models import InscriptionEvenement
 from apps.notifications.models import Notification
+
+logger = logging.getLogger(__name__)
 
 
 @staff_member_required
@@ -43,8 +46,7 @@ def admin_dashboard(request):
     return render(request, 'membres/admin_dashboard.html', context)
 
 
-@method_decorator(login_required, name='dispatch')
-class DashboardView(TemplateView):
+class DashboardView(LoginRequiredMixin, TemplateView):
     """
     Tableau de bord du membre
     """
@@ -54,17 +56,16 @@ class DashboardView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        try:
-            membre = Membre.objects.get(user=self.request.user)
-        except Membre.DoesNotExist:
-            membre = Membre.objects.create(
-                user=self.request.user,
-                nom=self.request.user.last_name or 'Nom',
-                prenom=self.request.user.first_name or 'Prénom',
-                email=self.request.user.email,
-                est_actif=True,
-                est_compte_active=True,
-            )
+        membre, _ = Membre.objects.get_or_create(
+            user=self.request.user,
+            defaults={
+                'nom': self.request.user.last_name or 'Nom',
+                'prenom': self.request.user.first_name or 'Prénom',
+                'email': self.request.user.email,
+                'est_actif': True,
+                'est_compte_active': True,
+            }
+        )
 
         context['membre'] = membre
         context['demandes'] = Demande.objects.filter(email=self.request.user.email).order_by('-date_soumission')
@@ -74,7 +75,6 @@ class DashboardView(TemplateView):
             evenement__statut='a_venir'
         ).select_related('evenement').order_by('evenement__date_debut')
 
-        
         context['notifications'] = Notification.objects.filter(
             utilisateur=self.request.user,
             est_lue=False
@@ -84,8 +84,7 @@ class DashboardView(TemplateView):
         return context
 
 
-@method_decorator(login_required, name='dispatch')
-class ProfilView(UpdateView):
+class ProfilView(LoginRequiredMixin, UpdateView):
     """
     Page de profil du membre avec modification
     """
@@ -97,19 +96,12 @@ class ProfilView(UpdateView):
     def get_object(self, queryset=None):
         return Membre.objects.filter(user=self.request.user).first()
 
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if self.object is None:
-            messages.info(request, "Aucune fiche membre n'est associée à votre compte. Contactez un administrateur.")
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if obj is None:
+            messages.error(request, "Aucune fiche membre n'est associée à votre compte. Contactez un administrateur.")
             return redirect('/')
-        return super().get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if self.object is None:
-            messages.error(request, "Aucune fiche membre n'est associée à votre compte.")
-            return redirect('/')
-        return super().post(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         messages.success(self.request, '✅ Vos informations ont été mises à jour avec succès !')
@@ -120,8 +112,7 @@ class ProfilView(UpdateView):
         return super().form_invalid(form)
 
 
-@method_decorator(login_required, name='dispatch')
-class MesDemandesView(ListView):
+class MesDemandesView(LoginRequiredMixin, ListView):
     """
     Liste des demandes du membre
     """
@@ -271,13 +262,14 @@ class AdhesionView(CreateView):
     success_url = reverse_lazy('membres:adhesion_succes')
     
     def form_valid(self, form):
-        response = super().form_valid(form)
+        # Sauvegarde explicite pour garantir la création de l'instance
+        self.object = form.save()
         
         # Email au demandeur
         try:
             sujet = f"Confirmation de votre demande d'adhésion - {getattr(settings, 'SITE_NAME', 'BETA-Résilience')}"
             message_html = render_to_string('membres/email_confirmation_adhesion.html', {
-                'demande': form.instance,
+                'demande': self.object,
                 'site_name': getattr(settings, 'SITE_NAME', 'BETA-Résilience'),
             })
             
@@ -285,19 +277,19 @@ class AdhesionView(CreateView):
                 sujet,
                 message_html,
                 settings.DEFAULT_FROM_EMAIL,
-                [form.instance.email],
+                [self.object.email],
                 reply_to=[getattr(settings, 'CONTACT_EMAIL', settings.DEFAULT_FROM_EMAIL)],
             )
             email.content_subtype = 'html'
             email.send(fail_silently=True)
         except Exception as e:
-            print(f"Erreur d'envoi d'email: {e}")
+            logger.error(f"Erreur d'envoi d'email au demandeur : {e}")
         
         # Email aux admins
         try:
-            sujet_admin = f"Nouvelle demande d'adhésion - {form.instance.prenom} {form.instance.nom}"
+            sujet_admin = f"Nouvelle demande d'adhésion - {self.object.prenom} {self.object.nom}"
             message_admin = render_to_string('membres/email_notification_admin.html', {
-                'demande': form.instance,
+                'demande': self.object,
                 'site_name': getattr(settings, 'SITE_NAME', 'BETA-Résilience'),
                 'admin_url': getattr(settings, 'ADMIN_URL', '/admin/'),
             })
@@ -311,13 +303,13 @@ class AdhesionView(CreateView):
             email_admin.content_subtype = 'html'
             email_admin.send(fail_silently=True)
         except Exception as e:
-            print(f"Erreur d'envoi d'email admin: {e}")
+            logger.error(f"Erreur d'envoi d'email admin : {e}")
         
         messages.success(
             self.request, 
             "Votre demande d'adhésion a été envoyée avec succès. Vous recevrez une confirmation par email dans les plus brefs délais."
         )
-        return response
+        return HttpResponseRedirect(self.get_success_url())
     
     def form_invalid(self, form):
         messages.error(self.request, 'Veuillez corriger les erreurs ci-dessous.')
