@@ -160,3 +160,55 @@
         max-width: 100% !important;
     }
 }
+
+/* =========================================================
+   FIX ANTI-CASSEMENT DU FORMULAIRE ET DES FICHIERS JOINTS
+   ========================================================= */
+
+/* 1. Empêcher tout élément du formulaire de dépasser de l'écran */
+form, 
+form *, 
+.form-group, 
+.mb-3 {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* 2. Alignment strict des libellés (labels) au-dessus des champs */
+.form-group label, 
+form label {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 6px !important;
+    font-weight: 600 !important;
+    float: none !important;
+}
+
+/* 3. Redimensionner tous les champs texte et sélecteurs */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+select,
+textarea,
+.form-control {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px !important;
+    font-size: 14px !important;
+    box-sizing: border-box !important;
+}
+
+/* 4. Correctif spécifique pour l'input File et le texte de fichier sélectionné */
+input[type="file"] {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    word-break: break-all !important;
+    overflow: hidden !important;
+    padding: 8px !important;
+    background: #f9f9f9 !important;
+    border: 1px dashed #bbb !important;
+    border-radius: 4px !important;
+}
