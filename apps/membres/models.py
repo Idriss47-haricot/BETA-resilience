@@ -315,7 +315,7 @@ class DemandeAdhesion(models.Model):
             prenom=self.prenom,
             email=self.email,
             telephone=self.telephone,
-            entite=self.entite,  # ✅ Transfert automatique de l'entité
+            entite=self.entite,
             est_actif=True,
             date_validation=timezone.now(),
         )
