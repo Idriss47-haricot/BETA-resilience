@@ -1,12 +1,7 @@
 from django.db import models
-
-# Create your models here.
-"""
-Modèles pour l'application Notifications
-"""
-from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 class Notification(models.Model):
@@ -28,16 +23,16 @@ class Notification(models.Model):
         ('reponse_demande', '📝 Réponse à votre demande'),
         ('systeme', '⚙️ Information système'),
     ]
-    
+
     utilisateur = models.ForeignKey(
-        User, 
-        on_delete=models.CASCADE, 
+        User,
+        on_delete=models.CASCADE,
         related_name='notifications',
         verbose_name='Utilisateur'
     )
     type = models.CharField(
-        'Type de notification', 
-        max_length=30, 
+        'Type de notification',
+        max_length=30,
         choices=TYPE_CHOICES
     )
     titre = models.CharField('Titre', max_length=200)
@@ -46,21 +41,21 @@ class Notification(models.Model):
     est_lue = models.BooleanField('Lue', default=False)
     date_creation = models.DateTimeField('Date de création', auto_now_add=True)
     date_lecture = models.DateTimeField('Date de lecture', null=True, blank=True)
-    
+
     class Meta:
         verbose_name = 'Notification'
         verbose_name_plural = 'Notifications'
         ordering = ['-date_creation']
-    
+
     def __str__(self):
         return f'{self.get_type_display()} - {self.utilisateur.username}'
-    
+
     def marquer_comme_lue(self):
         if not self.est_lue:
             self.est_lue = True
             self.date_lecture = timezone.now()
             self.save(update_fields=['est_lue', 'date_lecture'])
-    
+
     def get_icone(self):
         icons = {
             'demande_validee': 'fa-check-circle',
@@ -78,7 +73,7 @@ class Notification(models.Model):
             'systeme': 'fa-info-circle',
         }
         return icons.get(self.type, 'fa-bell')
-    
+
     def get_couleur(self):
         colors = {
             'demande_validee': '#28a745',
@@ -103,21 +98,21 @@ class PreferenceNotification(models.Model):
     Préférences de notification de l'utilisateur
     """
     utilisateur = models.OneToOneField(
-        User, 
-        on_delete=models.CASCADE, 
+        User,
+        on_delete=models.CASCADE,
         related_name='preferences_notifications',
         verbose_name='Utilisateur'
     )
     email_notifications = models.BooleanField(
-        'Notifications par email', 
+        'Notifications par email',
         default=True
     )
     push_notifications = models.BooleanField(
-        'Notifications sur le site', 
+        'Notifications sur le site',
         default=True
     )
     email_resume_quotidien = models.BooleanField(
-        'Résumé quotidien par email', 
+        'Résumé quotidien par email',
         default=False
     )
     types_actives = models.JSONField(
@@ -125,16 +120,13 @@ class PreferenceNotification(models.Model):
         default=list,
         blank=True
     )
-    
+
     class Meta:
         verbose_name = 'Préférence de notification'
         verbose_name_plural = 'Préférences de notifications'
-    
+
     def __str__(self):
         return f'Préférences de {self.utilisateur.username}'
-
-
-from django.core.exceptions import ValidationError
 
 
 def valider_fichier_message(fichier):
@@ -151,8 +143,18 @@ class MessagePrive(models.Model):
     """
     Message échangé entre l'administration et un membre
     """
-    membre = models.ForeignKey('membres.Membre', related_name='messages', on_delete=models.CASCADE)
-    expediteur = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages_prives_envoyes')
+    membre = models.ForeignKey(
+        'membres.Membre',
+        on_delete=models.CASCADE,
+        related_name='messages',
+        verbose_name='Membre'
+    )
+    expediteur = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='messages_prives_envoyes',
+        verbose_name='Expéditeur'
+    )
     contenu = models.TextField('Message', blank=True)
     fichier = models.FileField(
         'Pièce jointe',
