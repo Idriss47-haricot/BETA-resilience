@@ -56,7 +56,7 @@ class Membre(models.Model):
     # Fonction et statut
     fonction = models.ForeignKey(
         Fonction,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         verbose_name='Fonction'
