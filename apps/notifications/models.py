@@ -168,12 +168,12 @@ class MessagePrive(models.Model):
     lu_par_admin = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['date_envoi']
         verbose_name = 'Message privé'
-        verbose_name_plural = '💬 Messagerie'
+        verbose_name_plural = 'Messages privés'
+        ordering = ['-date_envoi']
 
     def __str__(self):
-        return f'{self.expediteur} → {self.membre} ({self.date_envoi:%d/%m/%Y %H:%M})'
+        return f"Message de {self.expediteur} pour {self.membre} ({self.date_envoi.strftime('%d/%m/%Y %H:%M')})"
 
     @property
     def est_message_admin(self):
