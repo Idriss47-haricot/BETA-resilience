@@ -1,9 +1,9 @@
 """
 Formulaires de l'application Demandes
 """
+import re
 from django import forms
 from apps.demandes.models import Demande
-import re
 
 
 class DemandeForm(forms.ModelForm):
@@ -19,15 +19,26 @@ class DemandeForm(forms.ModelForm):
             'objet', 'message', 'fichier'
         ]
         widgets = {
-            'message': forms.Textarea(attrs={'rows': 5, 'placeholder': 'Décrivez votre demande en détail...'}),
-            'objet': forms.TextInput(attrs={'placeholder': 'Sujet de votre demande'}),
-            'autre_type': forms.TextInput(attrs={'placeholder': 'Précisez votre type de demande'}),
-            'nom': forms.TextInput(attrs={'placeholder': 'Votre nom'}),
-            'prenom': forms.TextInput(attrs={'placeholder': 'Votre prénom'}),
-            'email': forms.EmailInput(attrs={'placeholder': 'votre@email.com'}),
-            'telephone': forms.TextInput(attrs={'placeholder': '6XX-XXX-XXX'}),
-            'societe': forms.TextInput(attrs={'placeholder': 'Nom de votre société ou institution (optionnel)'}),
-            'fonction': forms.TextInput(attrs={'placeholder': 'Votre fonction (optionnel)'}),
+            'entite': forms.Select(attrs={'class': 'form-control form-select'}),
+            'type_demande': forms.Select(attrs={'class': 'form-control form-select'}),
+            'message': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5, 
+                'placeholder': 'Décrivez votre demande en détail...'
+            }),
+            'objet': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Sujet de votre demande'}),
+            'autre_type': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Précisez votre type de demande'}),
+            'nom': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Votre nom'}),
+            'prenom': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Votre prénom'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'votre@email.com'}),
+            'telephone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '6XX-XXX-XXX'}),
+            'societe': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nom de votre société ou institution (optionnel)'}),
+            'fonction': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Votre fonction (optionnel)'}),
+            # Utilisation explicite de FileInput pour éviter la surcouche problématique de ClearableFileInput
+            'fichier': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf,.doc,.docx'
+            }),
         }
         labels = {
             'entite': 'Entité concernée',
@@ -40,7 +51,7 @@ class DemandeForm(forms.ModelForm):
         help_texts = {
             'fichier': 'Formats acceptés : PDF, DOC, DOCX (max 5 Mo)',
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -92,7 +103,7 @@ class DemandeForm(forms.ModelForm):
             self.fields['type_demande'].choices = self.type_choices[initial_entite]
         else:
             self.fields['type_demande'].choices = [('', 'Sélectionnez une entité d\'abord')]
-    
+
     def clean_telephone(self):
         telephone = self.cleaned_data.get('telephone')
         if telephone:
@@ -100,7 +111,7 @@ class DemandeForm(forms.ModelForm):
             if len(telephone) < 8:
                 raise forms.ValidationError('Le numéro de téléphone est trop court.')
         return telephone
-    
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
@@ -108,7 +119,7 @@ class DemandeForm(forms.ModelForm):
             if not re.match(email_regex, email):
                 raise forms.ValidationError('Veuillez saisir une adresse email valide.')
         return email
-    
+
     def clean(self):
         cleaned_data = super().clean()
         entite = cleaned_data.get('entite')
