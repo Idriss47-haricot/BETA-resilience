@@ -74,7 +74,7 @@
                                         <p class="mb-1 text-muted small">{{ notification.message }}</p>
                                         <div class="d-flex gap-2">
                                             {% if notification.lien %}
-                                            <a href="{% url 'notifications:detail' notification.pk %}" class="btn btn-sm btn-outline-success">
+                                            <a href="{{ notification.lien }}" class="btn btn-sm btn-outline-success">
                                                 Voir
                                             </a>
                                             {% endif %}
@@ -108,7 +108,6 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             const id = this.dataset.id;
             const item = this.closest('.notification-item');
-            const icon = item.querySelector('.notification-icon i');
             
             fetch(`/notifications/marquer-lue/${id}/`, {
                 method: 'POST',
@@ -121,18 +120,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     item.classList.remove('bg-light');
                     const title = item.querySelector('h6');
-                    title.classList.remove('fw-bold');
+                    if (title) title.classList.remove('fw-bold');
                     this.remove();
+                    
                     // Mettre à jour le badge
-                    const badge = document.querySelector('.badge.bg-danger');
-                    if (badge) {
+                    const badges = document.querySelectorAll('.badge.bg-danger');
+                    badges.forEach(badge => {
                         const count = parseInt(badge.textContent) - 1;
                         if (count > 0) {
                             badge.textContent = count;
                         } else {
                             badge.remove();
                         }
-                    }
+                    });
                 }
             });
         });
