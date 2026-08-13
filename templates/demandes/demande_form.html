@@ -14,7 +14,7 @@
         <input type="text" name="honeypot" class="d-none" value="">
         
         <!-- Champ entité caché -->
-        <input type="hidden" name="entite" id="id_entite_hidden" value="{{ entite }}">
+        <input type="hidden" name="entite" id="id_entite_hidden" value="{{ entite|default:'association' }}">
         
         <div class="row">
             <div class="col-md-6">
@@ -58,7 +58,7 @@
             <div class="col-md-6" id="autre_type_container" style="display: none;">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Autre type (précisez)</label>
-                    <input type="text" name="autre_type" class="form-control" placeholder="Précisez votre type de demande">
+                    <input type="text" name="autre_type" id="id_autre_type" class="form-control" placeholder="Précisez votre type de demande">
                 </div>
             </div>
         </div>
@@ -102,14 +102,11 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialiser les types de demande
-    const entite = document.getElementById('id_entite_hidden').value;
-    if (entite) {
-        mettreAJourTypes(entite);
-    }
-});
+    const entiteInput = document.getElementById('id_entite_hidden');
+    const selectType = document.getElementById('id_type_demande');
+    const autreContainer = document.getElementById('autre_type_container');
+    const autreInput = document.getElementById('id_autre_type');
 
-function mettreAJourTypes(entite) {
     const TYPES_DEMANDE = {
         'association': [
             ['adhesion', 'Adhésion'],
@@ -139,45 +136,39 @@ function mettreAJourTypes(entite) {
             ['partenariat', 'Partenariat académique'],
         ]
     };
-    
-    const select = document.getElementById('id_type_demande');
-    const autreContainer = document.getElementById('autre_type_container');
-    
-    if (!select) return;
-    
-    // Vider le select
-    select.innerHTML = '';
-    
-    // Ajouter une option par défaut
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'Sélectionnez un type';
-    select.appendChild(defaultOption);
-    
-    // Ajouter les types pour l'entité
-    const types = TYPES_DEMANDE[entite] || [];
-    types.forEach(function(type) {
-        const option = document.createElement('option');
-        option.value = type[0];
-        option.textContent = type[1];
-        select.appendChild(option);
+
+    function mettreAJourTypes(entiteKey) {
+        if (!selectType) return;
+        selectType.innerHTML = '<option value="">Sélectionnez un type</option>';
+        
+        const types = TYPES_DEMANDE[entiteKey] || TYPES_DEMANDE['association'];
+        types.forEach(function(type) {
+            const option = document.createElement('option');
+            option.value = type[0];
+            option.textContent = type[1];
+            selectType.appendChild(option);
+        });
+
+        const autreOption = document.createElement('option');
+        autreOption.value = 'autre';
+        autreOption.textContent = 'Autre (précisez)';
+        selectType.appendChild(autreOption);
+    }
+
+    // Initialisation des options
+    const entiteValeur = entiteInput ? entiteInput.value : 'association';
+    mettreAJourTypes(entiteValeur);
+
+    // Écouteur d'événement pour afficher/masquer le champ "Autre"
+    selectType.addEventListener('change', function() {
+        if (this.value === 'autre') {
+            autreContainer.style.display = 'block';
+            autreInput.setAttribute('required', 'required');
+        } else {
+            autreContainer.style.display = 'none';
+            autreInput.removeAttribute('required');
+            autreInput.value = '';
+        }
     });
-    
-    // Ajouter l'option "Autre"
-    const autreOption = document.createElement('option');
-    autreOption.value = 'autre';
-    autreOption.textContent = 'Autre (précisez)';
-    select.appendChild(autreOption);
-    
-    // Masquer le champ autre_type
-    if (autreContainer) {
-        autreContainer.style.display = 'none';
-    }
-    
-    // Réinitialiser le champ autre_type
-    const autreInput = document.querySelector('input[name="autre_type"]');
-    if (autreInput) {
-        autreInput.value = '';
-    }
-}
+});
 </script>
