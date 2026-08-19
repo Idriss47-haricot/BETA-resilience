@@ -22,7 +22,9 @@ ALLOWED_HOSTS = [
 IS_VERCEL = 'VERCEL' in os.environ or os.path.exists('/var/task')
 
 # ============ APPLICATIONS ============
+# Note: 'cloudinary_storage' DOIT être placé avant 'django.contrib.staticfiles'
 INSTALLED_APPS = [
+    'cloudinary_storage',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,7 +42,6 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'cloudinary_storage',
     'cloudinary',
     
     # BETA-Résilience apps
@@ -128,16 +129,15 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# ============ FICHIERS MÉDIAS ============
+# ============ FICHIERS MÉDIAS & STORAGE ============
 MEDIA_URL = '/media/'
 
-# En environnement Serverless/Vercel (/var/task est en lecture seule)
 if IS_VERCEL:
     MEDIA_ROOT = Path('/tmp') / 'media'
 else:
     MEDIA_ROOT = BASE_DIR / 'media'
 
-# Configuration Cloudinary si les clés sont présentes
+# Configuration dynamique du backend de stockage médias
 if os.getenv('CLOUDINARY_CLOUD_NAME'):
     CLOUDINARY_STORAGE = {
         'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
@@ -148,6 +148,17 @@ if os.getenv('CLOUDINARY_CLOUD_NAME'):
     STORAGES = {
         "default": {
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+elif IS_VERCEL:
+    # Secours si Cloudinary n'est pas configuré sur Vercel : évite le crash Read-only
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.InMemoryStorage'
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.InMemoryStorage",
         },
         "staticfiles": {
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
