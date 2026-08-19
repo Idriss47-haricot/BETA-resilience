@@ -1,4 +1,4 @@
-import os  # ✅ Corrigé (minuscule)
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 from django.urls import reverse_lazy
@@ -8,12 +8,14 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ============ SÉCURITÉ ============
-SECRET_KEY = 'django-insecure-temp-key-change-later'
-DEBUG = True  # Met False en production
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-temp-key-change-later')
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
+
 ALLOWED_HOSTS = [
     'carlosidriss.pythonanywhere.com',
     'localhost',
     '127.0.0.1',
+    '.vercel.app',  # Autorise tous les sous-domaines Vercel
 ]
 
 # ============ APPLICATIONS ============
@@ -36,6 +38,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'debug_toolbar',
+    'cloudinary_storage',
+    'cloudinary',
     
     # BETA-Résilience apps
     'apps.core',
@@ -118,7 +122,22 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ============ FICHIERS MÉDIAS ============
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
+# En environnement Serverless/Vercel, /var/task est en lecture seule.
+# On bascule le stockage temporaire sur /tmp pour éviter les crashs.
+if os.environ.get('VERCEL') or not DEBUG:
+    MEDIA_ROOT = Path('/tmp') / 'media'
+else:
+    MEDIA_ROOT = BASE_DIR / 'media'
+
+# Config Cloudinary si présent dans l'environnement (recommandé pour persistance)
+if os.getenv('CLOUDINARY_CLOUD_NAME'):
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+        'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # ============ CRISPY FORMS ============
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -147,7 +166,6 @@ COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.JSMinFilter']
 
 # ============ META ============
 META_SITE_NAME = 'BETA-Résilience'
-
 
 # ============ URL DU SITE ============
 SITE_URL = 'http://127.0.0.1:8000'
