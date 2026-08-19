@@ -18,6 +18,9 @@ ALLOWED_HOSTS = [
     '.vercel.app',  # Autorise tous les sous-domaines Vercel
 ]
 
+# ============ DÉTECTION ENVIRONNEMENT SERVERLESS ============
+IS_VERCEL = 'VERCEL' in os.environ or os.path.exists('/var/task')
+
 # ============ APPLICATIONS ============
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -37,7 +40,6 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'debug_toolbar',
     'cloudinary_storage',
     'cloudinary',
     
@@ -57,6 +59,10 @@ INSTALLED_APPS = [
     'apps.authentification',
 ]
 
+# Activer debug_toolbar uniquement en local
+if DEBUG and not IS_VERCEL:
+    INSTALLED_APPS.append('debug_toolbar')
+
 # ============ MIDDLEWARE ============
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -67,8 +73,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
+
+if DEBUG and not IS_VERCEL:
+    MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
 
 # ============ URLs ET WSGI ============
 ROOT_URLCONF = 'beta_site.urls'
@@ -123,14 +131,13 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # ============ FICHIERS MÉDIAS ============
 MEDIA_URL = '/media/'
 
-# En environnement Serverless/Vercel, /var/task est en lecture seule.
-# On bascule le stockage temporaire sur /tmp pour éviter les crashs.
-if os.environ.get('VERCEL') or not DEBUG:
+# En environnement Serverless/Vercel (/var/task est en lecture seule)
+if IS_VERCEL:
     MEDIA_ROOT = Path('/tmp') / 'media'
 else:
     MEDIA_ROOT = BASE_DIR / 'media'
 
-# Config Cloudinary si présent dans l'environnement (recommandé pour persistance)
+# Configuration Cloudinary si les clés sont présentes
 if os.getenv('CLOUDINARY_CLOUD_NAME'):
     CLOUDINARY_STORAGE = {
         'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
@@ -138,6 +145,14 @@ if os.getenv('CLOUDINARY_CLOUD_NAME'):
         'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
     }
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
 # ============ CRISPY FORMS ============
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -176,7 +191,7 @@ LOGIN_REDIRECT_URL = '/membres/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 
 # ============ DEBUG TOOLBAR ============
-if DEBUG:
+if DEBUG and not IS_VERCEL:
     INTERNAL_IPS = ['127.0.0.1']
 
 # ============ DÉFAUT ============
