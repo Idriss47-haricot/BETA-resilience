@@ -12,8 +12,8 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center p-4">
                         <div class="mb-3">
-                            {% if membre.photo %}
-                                <img src="{{ membre.photo.url }}" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #2E7D32;">
+                            {% if membre and membre.photo %}
+                                <img src="{{ membre.photo.url }}" alt="Photo de profil" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #2E7D32;">
                             {% else %}
                                 <i class="fas fa-user-circle" style="font-size: 5rem; color: #2E7D32;"></i>
                             {% endif %}
@@ -39,7 +39,9 @@
                         </a>
                         <a href="{% url 'notifications:liste' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-bell me-2"></i> Notifications</span>
-                            <span class="badge bg-danger rounded-pill" id="notif-badge" style="display: none;">{{ notifications_non_lues }}</span>
+                            <span class="badge bg-danger rounded-pill {% if not notifications_non_lues %}d-none{% endif %}" id="notif-badge">
+                                {{ notifications_non_lues|default:0 }}
+                            </span>
                         </a>
                         <a href="{% url 'notifications:messagerie_membre' %}" class="list-group-item list-group-item-action">
                             <i class="fas fa-comments me-2"></i> Mes messages
@@ -53,9 +55,14 @@
                         <a href="{% url 'forums:index' %}" class="list-group-item list-group-item-action">
                             <i class="fas fa-comments me-2"></i> Forums
                         </a>
-                        <a href="{% url 'logout' %}" class="list-group-item list-group-item-action text-danger">
-                            <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
-                        </a>
+                        
+                        <!-- Déconnexion via POST pour compatibilité Django moderne -->
+                        <form method="post" action="{% url 'logout' %}" class="d-inline m-0 p-0">
+                            {% csrf_token %}
+                            <button type="submit" class="list-group-item list-group-item-action text-danger border-0 w-100 text-start bg-transparent">
+                                <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -76,7 +83,7 @@
                             <div class="col-6 col-md-3">
                                 <div class="card border-0 bg-light">
                                     <div class="card-body text-center p-3">
-                                        <h2 class="text-success fw-bold mb-0">{{ demandes|length }}</h2>
+                                        <h2 class="text-success fw-bold mb-0">{{ demandes|length|default:0 }}</h2>
                                         <p class="text-muted small mb-0">Mes demandes</p>
                                     </div>
                                 </div>
@@ -84,7 +91,7 @@
                             <div class="col-6 col-md-3">
                                 <div class="card border-0 bg-light">
                                     <div class="card-body text-center p-3">
-                                        <h2 class="text-success fw-bold mb-0">{{ inscriptions|length }}</h2>
+                                        <h2 class="text-success fw-bold mb-0">{{ inscriptions|length|default:0 }}</h2>
                                         <p class="text-muted small mb-0">Événements</p>
                                     </div>
                                 </div>
@@ -157,7 +164,7 @@
                                         <a href="{% url 'evenements:mes_evenements' %}" class="btn btn-sm btn-outline-secondary">Tous</a>
                                     </div>
                                     <div class="card-body p-0">
-                                        {% if inscriptions or evenements %}
+                                        {% if inscriptions %}
                                             <div class="list-group list-group-flush">
                                                 {% for item in inscriptions|slice:":3" %}
                                                 <div class="list-group-item p-3">
@@ -240,26 +247,30 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     fetch('/notifications/compter/')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur HTTP ' + response.status);
+            return response.json();
+        })
         .then(data => {
             const badge = document.getElementById('notif-badge');
             const statNotif = document.getElementById('stat-notif-count');
             
             if (data.count !== undefined) {
+                const count = parseInt(data.count, 10);
                 if (badge) {
-                    if (data.count > 0) {
-                        badge.textContent = data.count;
-                        badge.style.display = 'inline-block';
+                    if (count > 0) {
+                        badge.textContent = count;
+                        badge.classList.remove('d-none');
                     } else {
-                        badge.style.display = 'none';
+                        badge.classList.add('d-none');
                     }
                 }
                 if (statNotif) {
-                    statNotif.textContent = data.count;
+                    statNotif.textContent = count;
                 }
             }
         })
-        .catch(error => console.error('Erreur chargement notifications:', error));
+        .catch(error => console.warn('Compteur de notifications non disponible:', error));
 });
 </script>
 {% endblock %}
