@@ -50,13 +50,40 @@
             <div class="col-md-6">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Type de demande <span class="text-danger">*</span></label>
-                    <select name="type_demande" id="id_type_demande" class="form-select" required>
+                    <select name="type_demande" id="id_type_demande" class="form-select" required onchange="handleTypeChange(this)">
                         <option value="">Sélectionnez un type</option>
-                        <option value="adhesion">Adhésion</option>
-                        <option value="benefice">Bénévolat</option>
-                        <option value="don">Don</option>
-                        <option value="partenariat">Partenariat associatif</option>
-                        <option value="information">Demande d'information</option>
+                        
+                        <optgroup label="Association" id="grp-association">
+                            <option value="adhesion">Adhésion</option>
+                            <option value="benefice">Bénévolat</option>
+                            <option value="don">Don</option>
+                            <option value="partenariat">Partenariat associatif</option>
+                            <option value="information">Demande d'information</option>
+                        </optgroup>
+                        
+                        <optgroup label="Bureau d'étude" id="grp-bureau_etude">
+                            <option value="etude">Étude environnementale</option>
+                            <option value="expertise">Expertise technique</option>
+                            <option value="conseil">Conseil stratégique</option>
+                            <option value="formation">Formation</option>
+                            <option value="prestation">Prestation de service</option>
+                        </optgroup>
+
+                        <optgroup label="Investissement" id="grp-invest">
+                            <option value="investissement">Investissement</option>
+                            <option value="partenariat">Partenariat économique</option>
+                            <option value="financement">Financement de projet</option>
+                            <option value="conseil">Conseil en investissement</option>
+                        </optgroup>
+
+                        <optgroup label="Laboratoire" id="grp-laboratoire">
+                            <option value="collaboration">Collaboration scientifique</option>
+                            <option value="recherche">Projet de recherche</option>
+                            <option value="publication">Publication scientifique</option>
+                            <option value="stage">Stage / Recherche</option>
+                            <option value="partenariat">Partenariat académique</option>
+                        </optgroup>
+                        
                         <option value="autre">Autre (précisez)</option>
                     </select>
                 </div>
@@ -107,82 +134,17 @@
 </div>
 
 <script>
-(function() {
-    const TYPES_DEMANDE = {
-        'association': [
-            ['adhesion', 'Adhésion'],
-            ['benefice', 'Bénévolat'],
-            ['don', 'Don'],
-            ['partenariat', 'Partenariat associatif'],
-            ['information', 'Demande d\'information'],
-        ],
-        'bureau_etude': [
-            ['etude', 'Étude environnementale'],
-            ['expertise', 'Expertise technique'],
-            ['conseil', 'Conseil stratégique'],
-            ['formation', 'Formation'],
-            ['prestation', 'Prestation de service'],
-        ],
-        'invest': [
-            ['investissement', 'Investissement'],
-            ['partenariat', 'Partenariat économique'],
-            ['financement', 'Financement de projet'],
-            ['conseil', 'Conseil en investissement'],
-        ],
-        'laboratoire': [
-            ['collaboration', 'Collaboration scientifique'],
-            ['recherche', 'Projet de recherche'],
-            ['publication', 'Publication scientifique'],
-            ['stage', 'Stage / Recherche'],
-            ['partenariat', 'Partenariat académique'],
-        ]
-    };
-
-    function initFormulaireDemande() {
-        const entiteInput = document.getElementById('id_entite_hidden');
-        const selectType = document.getElementById('id_type_demande');
-        const autreContainer = document.getElementById('autre_type_container');
-        const autreInput = document.getElementById('id_autre_type');
-
-        if (!selectType) return;
-
-        function mettreAJourTypes(entiteKey) {
-            selectType.innerHTML = '<option value="">Sélectionnez un type</option>';
-            const types = TYPES_DEMANDE[entiteKey] || TYPES_DEMANDE['association'];
-            types.forEach(function(type) {
-                const option = document.createElement('option');
-                option.value = type[0];
-                option.textContent = type[1];
-                selectType.appendChild(option);
-            });
-
-            const autreOption = document.createElement('option');
-            autreOption.value = 'autre';
-            autreOption.textContent = 'Autre (précisez)';
-            selectType.appendChild(autreOption);
-        }
-
-        const entiteValeur = entiteInput ? entiteInput.value : 'association';
-        mettreAJourTypes(entiteValeur);
-
-        selectType.onchange = function() {
-            if (this.value === 'autre') {
-                autreContainer.style.display = 'block';
-                autreInput.setAttribute('required', 'required');
-            } else {
-                autreContainer.style.display = 'none';
-                autreInput.removeAttribute('required');
-                autreInput.value = '';
-            }
-        };
+function handleTypeChange(selectElem) {
+    var autreContainer = document.getElementById('autre_type_container');
+    var autreInput = document.getElementById('id_autre_type');
+    
+    if (selectElem.value === 'autre') {
+        autreContainer.style.display = 'block';
+        autreInput.setAttribute('required', 'required');
+    } else {
+        autreContainer.style.display = 'none';
+        autreInput.removeAttribute('required');
+        autreInput.value = '';
     }
-
-    // Exécution immédiate
-    initFormulaireDemande();
-
-    // Ré-exécution à l'ouverture de la modale si Bootstrap est utilisé
-    document.addEventListener('shown.bs.modal', function() {
-        initFormulaireDemande();
-    });
-})();
+}
 </script>
