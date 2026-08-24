@@ -11,7 +11,7 @@
         {% csrf_token %}
         
         <!-- Champ honeypot pour anti-spam -->
-        <input type="text" name="honeypot" class="d-none" value="">
+        <input type="text" name="honeypot" class="d-none" value="" tabindex="-1" autocomplete="off">
         
         <!-- Champ entité caché -->
         <input type="hidden" name="entite" id="id_entite_hidden" value="{{ entite|default:'association' }}">
@@ -20,13 +20,13 @@
             <div class="col-md-6">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Nom <span class="text-danger">*</span></label>
-                    <input type="text" name="nom" class="form-control" required placeholder="Votre nom">
+                    <input type="text" name="nom" class="form-control" required placeholder="Votre nom" value="{{ request.user.last_name|default:'' }}">
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Prénom <span class="text-danger">*</span></label>
-                    <input type="text" name="prenom" class="form-control" required placeholder="Votre prénom">
+                    <input type="text" name="prenom" class="form-control" required placeholder="Votre prénom" value="{{ request.user.first_name|default:'' }}">
                 </div>
             </div>
         </div>
@@ -35,7 +35,7 @@
             <div class="col-md-6">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
-                    <input type="email" name="email" class="form-control" required placeholder="votre@email.com">
+                    <input type="email" name="email" class="form-control" required placeholder="votre@email.com" value="{{ request.user.email|default:'' }}">
                 </div>
             </div>
             <div class="col-md-6">
@@ -52,6 +52,12 @@
                     <label class="form-label fw-bold">Type de demande <span class="text-danger">*</span></label>
                     <select name="type_demande" id="id_type_demande" class="form-select" required>
                         <option value="">Sélectionnez un type</option>
+                        <option value="adhesion">Adhésion</option>
+                        <option value="benefice">Bénévolat</option>
+                        <option value="don">Don</option>
+                        <option value="partenariat">Partenariat associatif</option>
+                        <option value="information">Demande d'information</option>
+                        <option value="autre">Autre (précisez)</option>
                     </select>
                 </div>
             </div>
@@ -101,12 +107,7 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const entiteInput = document.getElementById('id_entite_hidden');
-    const selectType = document.getElementById('id_type_demande');
-    const autreContainer = document.getElementById('autre_type_container');
-    const autreInput = document.getElementById('id_autre_type');
-
+(function() {
     const TYPES_DEMANDE = {
         'association': [
             ['adhesion', 'Adhésion'],
@@ -137,38 +138,51 @@ document.addEventListener('DOMContentLoaded', function() {
         ]
     };
 
-    function mettreAJourTypes(entiteKey) {
-        if (!selectType) return;
-        selectType.innerHTML = '<option value="">Sélectionnez un type</option>';
-        
-        const types = TYPES_DEMANDE[entiteKey] || TYPES_DEMANDE['association'];
-        types.forEach(function(type) {
-            const option = document.createElement('option');
-            option.value = type[0];
-            option.textContent = type[1];
-            selectType.appendChild(option);
-        });
+    function initFormulaireDemande() {
+        const entiteInput = document.getElementById('id_entite_hidden');
+        const selectType = document.getElementById('id_type_demande');
+        const autreContainer = document.getElementById('autre_type_container');
+        const autreInput = document.getElementById('id_autre_type');
 
-        const autreOption = document.createElement('option');
-        autreOption.value = 'autre';
-        autreOption.textContent = 'Autre (précisez)';
-        selectType.appendChild(autreOption);
+        if (!selectType) return;
+
+        function mettreAJourTypes(entiteKey) {
+            selectType.innerHTML = '<option value="">Sélectionnez un type</option>';
+            const types = TYPES_DEMANDE[entiteKey] || TYPES_DEMANDE['association'];
+            types.forEach(function(type) {
+                const option = document.createElement('option');
+                option.value = type[0];
+                option.textContent = type[1];
+                selectType.appendChild(option);
+            });
+
+            const autreOption = document.createElement('option');
+            autreOption.value = 'autre';
+            autreOption.textContent = 'Autre (précisez)';
+            selectType.appendChild(autreOption);
+        }
+
+        const entiteValeur = entiteInput ? entiteInput.value : 'association';
+        mettreAJourTypes(entiteValeur);
+
+        selectType.onchange = function() {
+            if (this.value === 'autre') {
+                autreContainer.style.display = 'block';
+                autreInput.setAttribute('required', 'required');
+            } else {
+                autreContainer.style.display = 'none';
+                autreInput.removeAttribute('required');
+                autreInput.value = '';
+            }
+        };
     }
 
-    // Initialisation des options
-    const entiteValeur = entiteInput ? entiteInput.value : 'association';
-    mettreAJourTypes(entiteValeur);
+    // Exécution immédiate
+    initFormulaireDemande();
 
-    // Écouteur d'événement pour afficher/masquer le champ "Autre"
-    selectType.addEventListener('change', function() {
-        if (this.value === 'autre') {
-            autreContainer.style.display = 'block';
-            autreInput.setAttribute('required', 'required');
-        } else {
-            autreContainer.style.display = 'none';
-            autreInput.removeAttribute('required');
-            autreInput.value = '';
-        }
+    // Ré-exécution à l'ouverture de la modale si Bootstrap est utilisé
+    document.addEventListener('shown.bs.modal', function() {
+        initFormulaireDemande();
     });
-});
+})();
 </script>
