@@ -9,4 +9,5 @@ urlpatterns = [
     path('creer-sujet/<slug:slug>/', views.creer_sujet, name='creer_sujet'),
     path('sujet/<slug:slug>/', views.SujetDetailView.as_view(), name='sujet_detail'),
     path('repondre/<slug:slug>/', views.repondre_sujet, name='repondre'),
+    path('api/sujet/<int:sujet_id>/nouvelles/', views.api_nouvelles_reponses, name='api_nouvelles_reponses'),
 ]
