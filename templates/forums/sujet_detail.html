@@ -22,7 +22,7 @@
                         <h4 class="mb-0">{{ sujet.titre }}</h4>
                         <small class="text-muted">
                             Par {{ sujet.auteur.username }} · {{ sujet.date_creation|date:"d/m/Y H:i" }}
-                            · {{ sujet.get_nb_messages }} messages
+                            · <span id="nb-messages-count">{{ sujet.get_nb_messages }}</span> messages
                         </small>
                     </div>
                     <div class="card-body">
@@ -32,22 +32,24 @@
                         
                         <hr>
                         
-                        <!-- Messages -->
-                        {% for message in messages %}
-                        <div class="message-item mb-3 p-3 bg-light rounded" id="message-{{ message.id }}">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <strong>{{ message.auteur.username }}</strong>
-                                <small class="text-muted">{{ message.date_creation|date:"d/m/Y H:i" }}</small>
+                        <!-- Conteneur des Messages du forum -->
+                        <div id="forum-messages">
+                            {% for message in messages %}
+                            <div class="message-item mb-3 p-3 bg-light rounded" id="message-{{ message.id }}" data-id="{{ message.id }}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <strong>{{ message.auteur.username }}</strong>
+                                    <small class="text-muted">{{ message.date_creation|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                <div class="mb-0 mt-2">{{ message.contenu|linebreaks }}</div>
                             </div>
-                            <p class="mb-0 mt-2">{{ message.contenu|linebreaks }}</p>
+                            {% empty %}
+                            <p class="text-muted id="no-messages-text"">Aucun message dans ce sujet.</p>
+                            {% endfor %}
                         </div>
-                        {% empty %}
-                        <p class="text-muted">Aucun message dans ce sujet.</p>
-                        {% endfor %}
                         
                         <hr>
                         
-                        <!-- Répondre -->
+                        <!-- Section Répondre -->
                         {% if user.is_authenticated and not sujet.est_ferme %}
                         <h5 class="text-success">Répondre</h5>
                         <form method="post" action="{% url 'forums:repondre' sujet.slug %}">
@@ -74,4 +76,55 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sujetId = "{{ sujet.id }}";
+    const container = document.getElementById('forum-messages');
+
+    function verifierNouveauxMessages() {
+        // Récupère le dernier message affiché grâce au data-id
+        const dernierMsg = container.querySelector('.message-item:last-child');
+        const lastId = dernierMsg ? dernierMsg.dataset.id : 0;
+
+        // Requête AJAX vers l'API Django
+        fetch(`/forums/api/sujet/${sujetId}/nouvelles/?last_id=${lastId}`)
+            .then(response => {
+                if (!response.ok) return null;
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.reponses && data.reponses.length > 0) {
+                    // Masquer le texte "Aucun message" si présent
+                    const noMsgText = document.getElementById('no-messages-text');
+                    if (noMsgText) noMsgText.remove();
+
+                    data.reponses.forEach(rep => {
+                        // Empêcher l'ajout en doublon si déjà dans la page
+                        if (document.getElementById(`message-${rep.id}`)) return;
+
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = 'message-item mb-3 p-3 bg-light rounded';
+                        msgDiv.id = `message-${rep.id}`;
+                        msgDiv.dataset.id = rep.id;
+                        msgDiv.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>${rep.auteur}</strong>
+                                <small class="text-muted">${rep.date}</small>
+                            </div>
+                            <div class="mb-0 mt-2">${rep.contenu}</div>
+                        `;
+                        container.appendChild(msgDiv);
+                    });
+                }
+            })
+            .catch(error => console.error("Erreur de récupération des messages:", error));
+    }
+
+    // Interroge le serveur toutes les 3 secondes (3000 ms)
+    setInterval(verifierNouveauxMessages, 3000);
+});
+</script>
 {% endblock %}
