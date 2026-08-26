@@ -10,6 +10,28 @@ from django.contrib import messages
 from .forms import SujetForm, MessageForm
 from .models import ForumSujet, ForumCategorie
 from django.views.generic import ListView, DetailView
+from django.http import JsonResponse
+from .models import ReponseForum  # Adaptez selon votre modèle
+
+def api_nouvelles_reponses(request, sujet_id):
+    last_reponse_id = request.GET.get('last_id', 0)
+    
+    nouvelles_reponses = ReponseForum.objects.filter(
+        sujet_id=sujet_id,
+        id__gt=last_reponse_id
+    ).order_by('created_at')
+
+    data = []
+    for rep in nouvelles_reponses:
+        data.append({
+            'id': rep.id,
+            'auteur': rep.auteur.username,
+            'contenu': rep.contenu,
+            'date': rep.created_at.strftime('%d/%m/%Y à %H:%M')
+        })
+
+    return JsonResponse({'reponses': data})
+
 
 
 class ForumIndexView(ListView):
