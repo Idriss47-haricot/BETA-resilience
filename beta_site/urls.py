@@ -8,6 +8,7 @@ from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
 from django.views.generic import TemplateView
 from django.contrib.auth import views as auth_views
+from .sitemaps import StaticViewSitemap
 
 # Imports d'applications
 from apps.core.views import redirect_after_login
@@ -63,6 +64,7 @@ urlpatterns = [
     path('forums/', include('apps.forums.urls')),
     path('notifications/', include('apps.notifications.urls')),
     path('evenements/', include('apps.evenements.urls')),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
 
     # ----- Authentification & Comptes -----
     path('auth-2fa/', include('apps.authentification.urls')),
