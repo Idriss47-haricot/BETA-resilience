@@ -64,7 +64,6 @@ urlpatterns = [
     path('forums/', include('apps.forums.urls')),
     path('notifications/', include('apps.notifications.urls')),
     path('evenements/', include('apps.evenements.urls')),
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
 
     # ----- Authentification & Comptes -----
     path('auth-2fa/', include('apps.authentification.urls')),
@@ -72,7 +71,6 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('accounts/profile/', redirect_after_login, name='profile_redirect'),
     path('register/', TemplateView.as_view(template_name='authentification/register.html'), name='register_prive'),
-    path("robots.txt", robots_txt),
 
     # ----- Détail demande membre -----
     path('membres/ma-demande/<int:pk>/', MaDemandeDetailView.as_view(), name='ma_demande_detail'),
