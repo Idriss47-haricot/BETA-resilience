@@ -1,6 +1,7 @@
 """
 Gestion des méta-données pour le SEO
 """
+from django.http import HttpResponse
 from django.views.generic import View
 from django.template.loader import render_to_string
 from django.core.exceptions import ImproperlyConfigured
