@@ -9,13 +9,15 @@
             <!-- Liste des membres -->
             <div class="col-md-4 mb-3">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light">Choisir un membre</div>
+                    <div class="card-header bg-light fw-bold">Choisir un membre</div>
                     <div class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
                         {% for m in membres %}
                         <a href="{% url 'notifications:messagerie_admin_membre' m.id %}"
-                           class="list-group-item list-group-item-action {% if membre_selectionne.id == m.id %}active{% endif %}">
+                           class="list-group-item list-group-item-action {% if membre_selectionne and membre_selectionne.id == m.id %}active{% endif %}">
                             {{ m.prenom }} {{ m.nom }}
-                            <small class="d-block text-muted">{{ m.get_entite_display }}</small>
+                            <small class="d-block {% if membre_selectionne and membre_selectionne.id == m.id %}text-white-50{% else %}text-muted{% endif %}">
+                                {{ m.get_entite_display }}
+                            </small>
                         </a>
                         {% empty %}
                         <div class="p-3 text-muted">Aucun membre actif.</div>
@@ -28,11 +30,15 @@
             <div class="col-md-8">
                 {% if membre_selectionne %}
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light">
-                        Conversation avec {{ membre_selectionne.prenom }} {{ membre_selectionne.nom }}
+                    <!-- En-tête avec bouton Actualiser -->
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Conversation avec {{ membre_selectionne.prenom }} {{ membre_selectionne.nom }}</span>
+                        <button id="btn-refresh" class="btn btn-sm btn-outline-success" onclick="actualiserMessages()" title="Actualiser les messages">
+                            <i id="icon-refresh" class="fas fa-sync-alt me-1"></i> Actualiser
+                        </button>
                     </div>
                     
-                    <!-- Ajout de id="chat-messages" pour cibler le conteneur en JS -->
+                    <!-- Conteneur des messages -->
                     <div id="chat-messages" class="card-body" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;">
                         {% for msg in fil_messages %}
                         <div class="mb-3 {% if msg.est_message_admin %}text-end{% endif %}" data-id="{{ msg.id }}">
@@ -62,6 +68,7 @@
                         {% endfor %}
                     </div>
 
+                    <!-- Formulaire d'envoi -->
                     <div class="card-footer bg-white">
                         <form method="post" enctype="multipart/form-data">
                             {% csrf_token %}
@@ -78,9 +85,9 @@
                     </div>
                 </div>
                 {% else %}
-                <div class="text-center text-muted py-5">
+                <div class="card border-0 shadow-sm text-center text-muted py-5">
                     <i class="fas fa-hand-pointer fa-2x mb-3"></i>
-                    <p>Sélectionne un membre à gauche pour démarrer une conversation.</p>
+                    <p class="mb-0">Sélectionnez un membre à gauche pour démarrer une conversation.</p>
                 </div>
                 {% endif %}
             </div>
@@ -94,15 +101,13 @@
         const conteneur = document.getElementById('chat-messages');
         const membreId = "{{ membre_selectionne.id }}";
         
-        // Trouver le dernier ID de message présent dans la page
         let lastMessageElement = conteneur.querySelector('[data-id]:last-child');
         let lastMessageId = lastMessageElement ? lastMessageElement.getAttribute('data-id') : 0;
 
-        // Auto-scroll vers le bas au chargement initial
         conteneur.scrollTop = conteneur.scrollHeight;
 
-        function verifierNouveauxMessages() {
-            fetch(`/notifications/api/messages/nouveaux/?membre_id=${membreId}&last_id=${lastMessageId}`)
+        window.verifierNouveauxMessages = function() {
+            return fetch(`/notifications/api/messages/nouveaux/?membre_id=${membreId}&last_id=${lastMessageId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.messages && data.messages.length > 0) {
@@ -147,10 +152,24 @@
                     }
                 })
                 .catch(error => console.error('Erreur lors de la récupération des messages :', error));
-        }
+        };
 
-        // Vérifier les nouveaux messages toutes les 3 secondes
-        setInterval(verifierNouveauxMessages, 3000);
+        window.actualiserMessages = function() {
+            const btn = document.getElementById('btn-refresh');
+            const icon = document.getElementById('icon-refresh');
+            
+            if (btn) btn.disabled = true;
+            if (icon) icon.classList.add('fa-spin');
+
+            window.verifierNouveauxMessages().finally(() => {
+                setTimeout(() => {
+                    if (btn) btn.disabled = false;
+                    if (icon) icon.classList.remove('fa-spin');
+                }, 500);
+            });
+        };
+
+        setInterval(window.verifierNouveauxMessages, 3000);
     });
 </script>
 {% endif %}
