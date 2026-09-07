@@ -45,15 +45,6 @@
                                     {% if msg.contenu %}
                                         <p class="mb-1">{{ msg.contenu }}</p>
                                     {% endif %}
-                                    
-                                    {% if msg.fichier %}
-                                        <div class="mb-1">
-                                            <a href="{{ msg.fichier.url }}" target="_blank" class="{% if msg.expediteur == request.user %}text-white{% else %}text-primary{% endif %} text-decoration-underline">
-                                                <i class="bi bi-paperclip"></i> Fichier joint
-                                            </a>
-                                        </div>
-                                    {% endif %}
-                                    
                                     <small class="d-block text-end opacity-75" style="font-size: 0.7rem;">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
                                 </div>
                             </div>
@@ -66,18 +57,13 @@
 
                     <!-- Formulaire d'envoi -->
                     <div class="card-footer bg-white">
-                        <form method="post" action="?membre_id={{ membre_selectionne.id }}" enctype="multipart/form-data">
+                        <form method="post" action="?membre_id={{ membre_selectionne.id }}">
                             {% csrf_token %}
                             <input type="hidden" name="membre_id" value="{{ membre_selectionne.id }}">
                             <div class="input-group">
-                                <input type="text" name="contenu" class="form-control" placeholder="Écrivez votre message...">
-                                <input type="file" name="fichier" class="d-none" id="file-input" onchange="updateFileName(this)">
-                                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('file-input').click()" title="Joindre un fichier">
-                                    <i class="bi bi-paperclip"></i>
-                                </button>
+                                <input type="text" name="contenu" class="form-control" placeholder="Écrivez votre message..." required>
                                 <button class="btn btn-primary" type="submit">Envoyer</button>
                             </div>
-                            <small id="file-name" class="text-muted d-block mt-1" style="font-size: 0.8rem;"></small>
                         </form>
                     </div>
                 </div>
@@ -116,21 +102,9 @@
                         msgDiv.className = `mb-3 d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'}`;
                         msgDiv.setAttribute('data-id', msg.id);
 
-                        let mediaHtml = '';
-                        if (msg.fichier_url) {
-                            if (msg.est_image) {
-                                mediaHtml = `<div class="mb-1"><img src="${msg.fichier_url}" class="img-fluid rounded" style="max-height: 200px;"></div>`;
-                            } else if (msg.est_video) {
-                                mediaHtml = `<div class="mb-1"><video src="${msg.fichier_url}" controls style="max-width: 100%; max-height: 200px;"></video></div>`;
-                            } else {
-                                mediaHtml = `<div class="mb-1"><a href="${msg.fichier_url}" target="_blank" class="${isMe ? 'text-white' : 'text-primary'} text-decoration-underline"><i class="bi bi-paperclip"></i> Télécharger le fichier</a></div>`;
-                            }
-                        }
-
                         msgDiv.innerHTML = `
                             <div class="p-3 rounded-3 style-msg ${isMe ? 'bg-primary text-white' : 'bg-white text-dark border'}" style="max-width: 75%;">
                                 ${msg.contenu ? `<p class="mb-1">${msg.contenu}</p>` : ''}
-                                ${mediaHtml}
                                 <small class="d-block text-end opacity-75" style="font-size: 0.7rem;">${msg.date_envoi}</small>
                             </div>
                         `;
@@ -158,15 +132,6 @@
                 if (icon) icon.classList.remove('spin-icon');
             }, 500);
         });
-    }
-
-    function updateFileName(input) {
-        const fileNameDisplay = document.getElementById('file-name');
-        if (input.files && input.files[0]) {
-            fileNameDisplay.textContent = `Fichier sélectionné : ${input.files[0].name}`;
-        } else {
-            fileNameDisplay.textContent = '';
-        }
     }
 
     // Polling automatique toutes les 3 secondes
