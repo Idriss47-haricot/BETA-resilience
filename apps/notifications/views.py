@@ -6,22 +6,55 @@ from django.db.models import Q
 from apps.membres.models import Membre
 from .models import MessagePrive, Notification
 from django.http import JsonResponse
+from me.models import Membre
+from django.contrib.auth.decorators import login_required
+from .models import Message
 
 
-
-
+@login_required
 def get_nouveaux_messages_api(request):
-    """Renvoie la liste des messages sous format JSON"""
-    if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Non autorisé'}, status=401)
-        
+    membre_id = request.GET.get('membre_id')
     last_id = request.GET.get('last_id', 0)
-    messages = MessagePrive.objects.filter(
-        destinataire=request.user, 
+
+    try:
+        last_id = int(last_id)
+    except ValueError:
+        last_id = 0
+
+    if not membre_id:
+        return JsonResponse({'messages': []})
+
+    # Récupération des nouveaux messages échangés avec ce membre supérieurs à last_id
+    nouveaux_messages = Message.objects.filter(
+        membre_id=membre_id,
         id__gt=last_id
-    ).values('id', 'expediteur__username', 'contenu', 'date_envoi')
-    
-    return JsonResponse({'messages': list(messages)})
+    ).order_by('id')
+
+    data = []
+    for msg in nouveaux_messages:
+        # Vérification si le fichier est une image ou une vidéo
+        fichier_url = msg.fichier.url if msg.fichier else None
+        est_image = False
+        est_video = False
+
+        if fichier_url:
+            ext = fichier_url.split('.')[-1].lower()
+            if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp']:
+                est_image = True
+            elif ext in ['mp4', 'webm', 'ogg']:
+                est_video = True
+
+        data.append({
+            "id": msg.id,
+            "contenu": msg.contenu or "",
+            "est_message_admin": msg.est_message_admin,  # Ou msg.expediteur == request.user selon votre modèle
+            "fichier_url": fichier_url,
+            "est_image": est_image,
+            "est_video": est_video,
+            "date_envoi": msg.date_envoi.strftime("%d/%m/%Y %H:%i") if hasattr(msg, 'date_envoi') else ""
+        })
+
+    return JsonResponse({"messages": data})
 
 
 @login_required
