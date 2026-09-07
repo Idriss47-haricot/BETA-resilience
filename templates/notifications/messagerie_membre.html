@@ -1,7 +1,6 @@
 {% extends "core/base.html" %}
 
 {% block content %}
-<!-- Inclusion de Bootstrap si non présent dans le base.html -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <div class="container my-4">
@@ -33,16 +32,18 @@
                         <h5 class="mb-0">Discussion avec {{ membre_selectionne.nom|default:membre_selectionne.user.username }}</h5>
                     </div>
                     
-                    <div class="card-body overflow-auto" style="height: 380px; background-color: #f8f9fa;">
+                    <!-- Ajout de id="chat-messages" pour cibler le conteneur en JS -->
+                    <div id="chat-messages" class="card-body overflow-auto" style="height: 380px; background-color: #f8f9fa;">
                         {% for msg in conversation %}
-                            <div class="mb-3 d-flex {% if msg.expediteur == request.user %}justify-content-end{% else %}justify-content-start{% endif %}">
+                            <!-- Ajout de data-id pour suivre le dernier message chargé -->
+                            <div class="mb-3 d-flex {% if msg.expediteur == request.user %}justify-content-end{% else %}justify-content-start{% endif %}" data-id="{{ msg.id }}">
                                 <div class="p-3 rounded-3 style-msg {% if msg.expediteur == request.user %}bg-primary text-white{% else %}bg-white text-dark border{% endif %}" style="max-width: 75%;">
                                     <p class="mb-1">{{ msg.contenu }}</p>
                                     <small class="d-block text-end opacity-75" style="font-size: 0.7rem;">{{ msg.date_envoi|date:"H:i" }}</small>
                                 </div>
                             </div>
                         {% empty %}
-                            <div class="text-center text-muted py-5">
+                            <div id="empty-msg" class="text-center text-muted py-5">
                                 Aucun message échangé pour le moment. Envoyez le premier message !
                             </div>
                         {% endfor %}
@@ -67,36 +68,55 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
-<!-- Placez ce script juste avant </body> ou à la fin de votre template -->
+{% if membre_selectionne %}
 <script>
-    let lastMessageId = 0; // Stocke l'ID du dernier message affiché
+    const conteneur = document.getElementById('chat-messages');
+    const membreId = "{{ membre_selectionne.id }}";
+    
+    // Récupère l'ID du dernier message affiché au chargement initial
+    let lastMessageElement = conteneur.querySelector('[data-id]:last-child');
+    let lastMessageId = lastMessageElement ? lastMessageElement.getAttribute('data-id') : 0;
+
+    // Fait défiler le chat tout en bas au chargement
+    conteneur.scrollTop = conteneur.scrollHeight;
 
     function verifierNouveauxMessages() {
-        fetch(`/notifications/api/messages/nouveaux/?last_id=${lastMessageId}`)
+        fetch(`/notifications/api/messages/nouveaux/?membre_id=${membreId}&last_id=${lastMessageId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.messages && data.messages.length > 0) {
-                    const conteneur = document.getElementById('chat-messages'); // Remplacez par l'ID de votre conteneur de chat
-                    
+                    // Supprime le message "Aucun message..." si présent
+                    const emptyMsg = document.getElementById('empty-msg');
+                    if (emptyMsg) emptyMsg.remove();
+
                     data.messages.forEach(msg => {
-                        // Création du bloc de message
-                        const msgElement = document.createElement('div');
-                        msgElement.className = 'message message-recu';
-                        msgElement.innerHTML = `<strong>${msg.expediteur}</strong> [${msg.created_at}]: <p>${msg.contenu}</p>`;
+                        const isMe = msg.is_me; // Booléen envoyé par le serveur
                         
-                        conteneur.appendChild(msgElement);
-                        lastMessageId = msg.id; // Mise à jour du dernier ID
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = `mb-3 d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'}`;
+                        msgDiv.setAttribute('data-id', msg.id);
+
+                        msgDiv.innerHTML = `
+                            <div class="p-3 rounded-3 style-msg ${isMe ? 'bg-primary text-white' : 'bg-white text-dark border'}" style="max-width: 75%;">
+                                <p class="mb-1">${msg.contenu}</p>
+                                <small class="d-block text-end opacity-75" style="font-size: 0.7rem;">${msg.date_envoi}</small>
+                            </div>
+                        `;
+
+                        conteneur.appendChild(msgDiv);
+                        lastMessageId = msg.id;
                     });
 
-                    // Faire défiler vers le bas automatiquement
+                    // Scroll automatique vers le bas lors de l'arrivée d'un nouveau message
                     conteneur.scrollTop = conteneur.scrollHeight;
                 }
             })
-            .catch(error => console.error('Erreur lors du chargement des messages:', error));
+            .catch(error => console.error('Erreur :', error));
     }
 
-    // Interroger le serveur toutes les 3 secondes (3000 ms)
+    // Vérification toutes les 3 secondes
     setInterval(verifierNouveauxMessages, 3000);
 </script>
+{% endif %}
+{% endblock %}
