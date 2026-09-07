@@ -2,13 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Q
+from django.http import JsonResponse
 
 from apps.membres.models import Membre
 from .models import MessagePrive, Notification
-from django.http import JsonResponse
-from me.models import Membre
-from django.contrib.auth.decorators import login_required
-from .models import Message
 
 
 @login_required
@@ -24,15 +21,14 @@ def get_nouveaux_messages_api(request):
     if not membre_id:
         return JsonResponse({'messages': []})
 
-    # Récupération des nouveaux messages échangés avec ce membre supérieurs à last_id
-    nouveaux_messages = Message.objects.filter(
+    # Utilisation du modèle MessagePrive au lieu de Message
+    nouveaux_messages = MessagePrive.objects.filter(
         membre_id=membre_id,
         id__gt=last_id
-    ).order_by('id')
+    ).select_related('expediteur').order_by('id')
 
     data = []
     for msg in nouveaux_messages:
-        # Vérification si le fichier est une image ou une vidéo
         fichier_url = msg.fichier.url if msg.fichier else None
         est_image = False
         est_video = False
@@ -44,14 +40,17 @@ def get_nouveaux_messages_api(request):
             elif ext in ['mp4', 'webm', 'ogg']:
                 est_video = True
 
+        # Détermine si le message vient d'un administrateur ou de l'utilisateur courant
+        est_admin = getattr(msg, 'est_message_admin', msg.expediteur.is_staff if msg.expediteur else False)
+
         data.append({
             "id": msg.id,
             "contenu": msg.contenu or "",
-            "est_message_admin": msg.est_message_admin,  # Ou msg.expediteur == request.user selon votre modèle
+            "est_message_admin": est_admin,
             "fichier_url": fichier_url,
             "est_image": est_image,
             "est_video": est_video,
-            "date_envoi": msg.date_envoi.strftime("%d/%m/%Y %H:%i") if hasattr(msg, 'date_envoi') else ""
+            "date_envoi": msg.date_envoi.strftime("%d/%m/%Y %H:%M") if hasattr(msg, 'date_envoi') and msg.date_envoi else ""
         })
 
     return JsonResponse({"messages": data})
@@ -89,14 +88,13 @@ def preferences(request):
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def messagerie_admin(request, membre_id=None):
-    # Tous les membres sont affichés (sans restriction sur est_actif)
     membres = Membre.objects.all().order_by('nom', 'prenom')
     membre_selectionne = None
     fil_messages = []
 
     if membre_id:
         membre_selectionne = get_object_or_404(Membre, pk=membre_id)
-        fil_messages = MessagePrive.objects.filter(membre=membre_selectionne)
+        fil_messages = MessagePrive.objects.filter(membre=membre_selectionne).order_by('date_envoi')
         
         # Marquer comme lus par l'admin si l'expéditeur n'est pas l'admin
         fil_messages.exclude(expediteur=request.user).update(lu_par_admin=True)
@@ -136,10 +134,8 @@ def messagerie_admin(request, membre_id=None):
 
 @login_required
 def messagerie_membre(request):
-    # Récupérer ou créer l'instance Membre liée à l'utilisateur actuel
     membre_actuel, _ = Membre.objects.get_or_create(user=request.user)
 
-    # Récupérer uniquement les membres qui possèdent un compte User valide
     membres = (
         Membre.objects.filter(user__isnull=False)
         .exclude(id=membre_actuel.id)
@@ -162,7 +158,6 @@ def messagerie_membre(request):
             contenu = request.POST.get('contenu', '').strip()
             fichier = request.FILES.get('fichier')
             if contenu or fichier:
-                # 1. Passer l'instance membre_selectionne (Membre)
                 MessagePrive.objects.create(
                     expediteur=request.user,
                     membre=membre_selectionne,
@@ -170,7 +165,6 @@ def messagerie_membre(request):
                     fichier=fichier
                 )
 
-                # 2. Notification envoyée au destinataire
                 if hasattr(membre_selectionne, 'user') and membre_selectionne.user:
                     nom_expediteur = request.user.get_full_name() or request.user.username
                     Notification.objects.create(
@@ -183,14 +177,13 @@ def messagerie_membre(request):
 
                 return redirect(f"{request.path}?membre_id={membre_selectionne.id}")
 
-        # Charger la conversation (fil d'échange entre les deux membres)
+        # Charger la conversation
         if membre_selectionne.user:
             conversation = MessagePrive.objects.filter(
                 (Q(expediteur=request.user) & Q(membre=membre_selectionne)) |
                 (Q(expediteur=membre_selectionne.user) & Q(membre=membre_actuel))
             ).select_related('expediteur', 'membre').order_by('date_envoi')
 
-            # Marquer les messages reçus comme lus
             MessagePrive.objects.filter(
                 expediteur=membre_selectionne.user,
                 membre=membre_actuel,
