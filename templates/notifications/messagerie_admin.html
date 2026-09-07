@@ -1,10 +1,12 @@
 {% extends 'core/base.html' %}
 {% block title %}Messagerie - Administration{% endblock %}
+
 {% block content %}
 <section class="py-4">
     <div class="container">
         <h1 class="text-success mb-4"><i class="fas fa-comments me-2"></i> Messagerie</h1>
         <div class="row">
+            <!-- Liste des membres -->
             <div class="col-md-4 mb-3">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-light">Choisir un membre</div>
@@ -22,17 +24,21 @@
                 </div>
             </div>
 
+            <!-- Zone de discussion -->
             <div class="col-md-8">
                 {% if membre_selectionne %}
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-light">
                         Conversation avec {{ membre_selectionne.prenom }} {{ membre_selectionne.nom }}
                     </div>
-                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    
+                    <!-- Ajout de id="chat-messages" pour cibler le conteneur en JS -->
+                    <div id="chat-messages" class="card-body" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;">
                         {% for msg in fil_messages %}
-                        <div class="mb-3 {% if msg.est_message_admin %}text-end{% endif %}">
-                            <div class="d-inline-block p-2 rounded {% if msg.est_message_admin %}bg-success text-white{% else %}bg-light{% endif %}" style="max-width: 75%;">
-                                {% if msg.contenu %}<div>{{ msg.contenu|linebreaksbr }}</div>{% endif %}
+                        <div class="mb-3 {% if msg.est_message_admin %}text-end{% endif %}" data-id="{{ msg.id }}">
+                            <div class="d-inline-block p-2 rounded {% if msg.est_message_admin %}bg-success text-white{% else %}bg-white text-dark border{% endif %}" style="max-width: 75%;">
+                                {% if msg.contenu %}<div class="text-start">{{ msg.contenu|linebreaksbr }}</div>{% endif %}
+                                
                                 {% if msg.fichier %}
                                     {% if msg.est_video %}
                                     <video controls class="w-100 mt-2" style="max-height: 250px;">
@@ -41,18 +47,21 @@
                                     {% elif msg.est_image %}
                                     <img src="{{ msg.fichier.url }}" class="img-fluid mt-2 rounded" alt="Pièce jointe">
                                     {% else %}
-                                    <a href="{{ msg.fichier.url }}" target="_blank" class="d-block mt-2">
+                                    <a href="{{ msg.fichier.url }}" target="_blank" class="d-block mt-2 {% if msg.est_message_admin %}text-white{% else %}text-primary{% endif %}">
                                         <i class="fas fa-paperclip me-1"></i> Fichier joint
                                     </a>
                                     {% endif %}
                                 {% endif %}
-                                <small class="d-block mt-1 opacity-75">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
+                                <small class="d-block mt-1 opacity-75 text-end" style="font-size: 0.7rem;">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
                             </div>
                         </div>
                         {% empty %}
-                        <p class="text-muted">Aucun message pour l'instant.</p>
+                        <div id="empty-msg" class="text-center text-muted py-5">
+                            Aucun message pour l'instant.
+                        </div>
                         {% endfor %}
                     </div>
+
                     <div class="card-footer bg-white">
                         <form method="post" enctype="multipart/form-data">
                             {% csrf_token %}
@@ -78,36 +87,71 @@
         </div>
     </div>
 </section>
-{% endblock %}
 
-<!-- Placez ce script juste avant </body> ou à la fin de votre template -->
+{% if membre_selectionne %}
 <script>
-    let lastMessageId = 0; // Stocke l'ID du dernier message affiché
+    document.addEventListener("DOMContentLoaded", function() {
+        const conteneur = document.getElementById('chat-messages');
+        const membreId = "{{ membre_selectionne.id }}";
+        
+        // Trouver le dernier ID de message présent dans la page
+        let lastMessageElement = conteneur.querySelector('[data-id]:last-child');
+        let lastMessageId = lastMessageElement ? lastMessageElement.getAttribute('data-id') : 0;
 
-    function verifierNouveauxMessages() {
-        fetch(`/notifications/api/messages/nouveaux/?last_id=${lastMessageId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.messages && data.messages.length > 0) {
-                    const conteneur = document.getElementById('chat-messages'); // Remplacez par l'ID de votre conteneur de chat
-                    
-                    data.messages.forEach(msg => {
-                        // Création du bloc de message
-                        const msgElement = document.createElement('div');
-                        msgElement.className = 'message message-recu';
-                        msgElement.innerHTML = `<strong>${msg.expediteur}</strong> [${msg.created_at}]: <p>${msg.contenu}</p>`;
-                        
-                        conteneur.appendChild(msgElement);
-                        lastMessageId = msg.id; // Mise à jour du dernier ID
-                    });
+        // Auto-scroll vers le bas au chargement initial
+        conteneur.scrollTop = conteneur.scrollHeight;
 
-                    // Faire défiler vers le bas automatiquement
-                    conteneur.scrollTop = conteneur.scrollHeight;
-                }
-            })
-            .catch(error => console.error('Erreur lors du chargement des messages:', error));
-    }
+        function verifierNouveauxMessages() {
+            fetch(`/notifications/api/messages/nouveaux/?membre_id=${membreId}&last_id=${lastMessageId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.messages && data.messages.length > 0) {
+                        const emptyMsg = document.getElementById('empty-msg');
+                        if (emptyMsg) emptyMsg.remove();
 
-    // Interroger le serveur toutes les 3 secondes (3000 ms)
-    setInterval(verifierNouveauxMessages, 3000);
+                        data.messages.forEach(msg => {
+                            const isAdmin = msg.est_message_admin;
+                            
+                            const msgWrapper = document.createElement('div');
+                            msgWrapper.className = `mb-3 ${isAdmin ? 'text-end' : ''}`;
+                            msgWrapper.setAttribute('data-id', msg.id);
+
+                            let contentHtml = '';
+                            if (msg.contenu) {
+                                contentHtml += `<div class="text-start">${msg.contenu.replace(/\n/g, '<br>')}</div>`;
+                            }
+
+                            if (msg.fichier_url) {
+                                if (msg.est_video) {
+                                    contentHtml += `<video controls class="w-100 mt-2" style="max-height: 250px;"><source src="${msg.fichier_url}"></video>`;
+                                } else if (msg.est_image) {
+                                    contentHtml += `<img src="${msg.fichier_url}" class="img-fluid mt-2 rounded" alt="Pièce jointe">`;
+                                } else {
+                                    contentHtml += `<a href="${msg.fichier_url}" target="_blank" class="d-block mt-2 ${isAdmin ? 'text-white' : 'text-primary'}"><i class="fas fa-paperclip me-1"></i> Fichier joint</a>`;
+                                }
+                            }
+
+                            contentHtml += `<small class="d-block mt-1 opacity-75 text-end" style="font-size: 0.7rem;">${msg.date_envoi}</small>`;
+
+                            msgWrapper.innerHTML = `
+                                <div class="d-inline-block p-2 rounded ${isAdmin ? 'bg-success text-white' : 'bg-white text-dark border'}" style="max-width: 75%;">
+                                    ${contentHtml}
+                                </div>
+                            `;
+
+                            conteneur.appendChild(msgWrapper);
+                            lastMessageId = msg.id;
+                        });
+
+                        conteneur.scrollTop = conteneur.scrollHeight;
+                    }
+                })
+                .catch(error => console.error('Erreur lors de la récupération des messages :', error));
+        }
+
+        // Vérifier les nouveaux messages toutes les 3 secondes
+        setInterval(verifierNouveauxMessages, 3000);
+    });
 </script>
+{% endif %}
+{% endblock %}
