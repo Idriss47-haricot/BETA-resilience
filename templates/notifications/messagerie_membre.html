@@ -78,64 +78,64 @@
 
 {% if membre_selectionne %}
 <script>
-    const conteneur = document.getElementById('chat-messages');
-    const membreId = "{{ membre_selectionne.id }}";
-    
-    let lastMessageElement = conteneur.querySelector('[data-id]:last-child');
-    let lastMessageId = lastMessageElement ? lastMessageElement.getAttribute('data-id') : 0;
-
-    // Défilement automatique au bas au chargement
-    conteneur.scrollTop = conteneur.scrollHeight;
-
-    function verifierNouveauxMessages() {
-        return fetch(`/notifications/api/messages/nouveaux/?membre_id=${membreId}&last_id=${lastMessageId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.messages && data.messages.length > 0) {
-                    const emptyMsg = document.getElementById('empty-msg');
-                    if (emptyMsg) emptyMsg.remove();
-
-                    data.messages.forEach(msg => {
-                        const isMe = msg.est_me;
-                        
-                        const msgDiv = document.createElement('div');
-                        msgDiv.className = `mb-3 d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'}`;
-                        msgDiv.setAttribute('data-id', msg.id);
-
-                        msgDiv.innerHTML = `
-                            <div class="p-3 rounded-3 style-msg ${isMe ? 'bg-primary text-white' : 'bg-white text-dark border'}" style="max-width: 75%;">
-                                ${msg.contenu ? `<p class="mb-1">${msg.contenu}</p>` : ''}
-                                <small class="d-block text-end opacity-75" style="font-size: 0.7rem;">${msg.date_envoi}</small>
-                            </div>
-                        `;
-
-                        conteneur.appendChild(msgDiv);
-                        lastMessageId = msg.id;
-                    });
-
-                    conteneur.scrollTop = conteneur.scrollHeight;
-                }
-            })
-            .catch(error => console.error('Erreur de chargement :', error));
-    }
-
-    function actualiserMessages() {
-        const btn = document.getElementById('btn-refresh');
-        const icon = document.getElementById('icon-refresh');
+    document.addEventListener("DOMContentLoaded", function() {
+        const conteneur = document.getElementById('chat-messages');
+        const membreId = "{{ membre_selectionne.id }}";
         
-        if (btn) btn.disabled = true;
-        if (icon) icon.classList.add('spin-icon');
+        let lastMessageElement = conteneur.querySelector('[data-id]:last-child');
+        let lastMessageId = lastMessageElement ? lastMessageElement.getAttribute('data-id') : 0;
 
-        verifierNouveauxMessages().finally(() => {
-            setTimeout(() => {
-                if (btn) btn.disabled = false;
-                if (icon) icon.classList.remove('spin-icon');
-            }, 500);
-        });
-    }
+        conteneur.scrollTop = conteneur.scrollHeight;
 
-    // Polling automatique toutes les 3 secondes
-    setInterval(verifierNouveauxMessages, 3000);
+        window.verifierNouveauxMessages = function() {
+            return fetch(`/notifications/api/messages/nouveaux/?membre_id=${membreId}&last_id=${lastMessageId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.messages && data.messages.length > 0) {
+                        const emptyMsg = document.getElementById('empty-msg');
+                        if (emptyMsg) emptyMsg.remove();
+
+                        data.messages.forEach(msg => {
+                            const isMe = msg.est_me;
+                            
+                            const msgDiv = document.createElement('div');
+                            msgDiv.className = `mb-3 d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'}`;
+                            msgDiv.setAttribute('data-id', msg.id);
+
+                            msgDiv.innerHTML = `
+                                <div class="p-3 rounded-3 style-msg ${isMe ? 'bg-primary text-white' : 'bg-white text-dark border'}" style="max-width: 75%;">
+                                    ${msg.contenu ? `<p class="mb-1">${msg.contenu}</p>` : ''}
+                                    <small class="d-block text-end opacity-75" style="font-size: 0.7rem;">${msg.date_envoi}</small>
+                                </div>
+                            `;
+
+                            conteneur.appendChild(msgDiv);
+                            lastMessageId = msg.id;
+                        });
+
+                        conteneur.scrollTop = conteneur.scrollHeight;
+                    }
+                })
+                .catch(error => console.error('Erreur de chargement :', error));
+        };
+
+        window.actualiserMessages = function() {
+            const btn = document.getElementById('btn-refresh');
+            const icon = document.getElementById('icon-refresh');
+            
+            if (btn) btn.disabled = true;
+            if (icon) icon.classList.add('spin-icon');
+
+            window.verifierNouveauxMessages().finally(() => {
+                setTimeout(() => {
+                    if (btn) btn.disabled = false;
+                    if (icon) icon.classList.remove('spin-icon');
+                }, 400);
+            });
+        };
+
+        setInterval(window.verifierNouveauxMessages, 3000);
+    });
 </script>
 
 <style>
