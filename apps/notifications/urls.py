@@ -10,5 +10,5 @@ urlpatterns = [
     path('messagerie/', views.messagerie_admin, name='messagerie_admin'),
     path('messagerie/<int:membre_id>/', views.messagerie_admin, name='messagerie_admin_membre'),
     path('mes-messages/', views.messagerie_membre, name='messagerie_membre'),
-    path('api/messages/nouveaux/', get_nouveaux_messages_api, name='api_nouveaux_messages'),
+    path('api/messages/nouveaux/', views.get_nouveaux_messages_api, name='api_nouveaux_messages'),
 ]
