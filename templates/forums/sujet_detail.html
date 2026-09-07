@@ -3,7 +3,6 @@
 {% block title %}{{ sujet.titre }} - BETA-Résilience{% endblock %}
 
 {% block content %}
-
 <section class="py-4">
     <div class="container">
         <div class="row">
@@ -18,13 +17,19 @@
                 </nav>
                 
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light py-3">
-                        <h4 class="mb-0">{{ sujet.titre }}</h4>
-                        <small class="text-muted">
-                            Par {{ sujet.auteur.username }} · {{ sujet.date_creation|date:"d/m/Y H:i" }}
-                            · <span id="nb-messages-count">{{ sujet.get_nb_messages }}</span> messages
-                        </small>
+                    <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-1">{{ sujet.titre }}</h4>
+                            <small class="text-muted">
+                                Par {{ sujet.auteur.username }} · {{ sujet.date_creation|date:"d/m/Y H:i" }}
+                                · <span id="nb-messages-count">{{ sujet.get_nb_messages }}</span> message(s)
+                            </small>
+                        </div>
+                        <button id="btn-refresh" class="btn btn-sm btn-outline-success" onclick="actualiserSujet()" title="Actualiser la discussion">
+                            <i id="icon-refresh" class="fas fa-sync-alt me-1"></i> Actualiser
+                        </button>
                     </div>
+                    
                     <div class="card-body">
                         <div class="sujet-contenu mb-4">
                             {{ sujet.contenu|linebreaks }}
@@ -43,7 +48,7 @@
                                 <div class="mb-0 mt-2">{{ message.contenu|linebreaks }}</div>
                             </div>
                             {% empty %}
-                            <p class="text-muted id="no-messages-text"">Aucun message dans ce sujet.</p>
+                            <p class="text-muted" id="no-messages-text">Aucun message dans ce sujet.</p>
                             {% endfor %}
                         </div>
                         
@@ -54,19 +59,21 @@
                         <h5 class="text-success">Répondre</h5>
                         <form method="post" action="{% url 'forums:repondre' sujet.slug %}">
                             {% csrf_token %}
-                            {{ form.contenu }}
+                            <div class="mb-2">
+                                {{ form.contenu }}
+                            </div>
                             <button type="submit" class="btn btn-success mt-2">
                                 <i class="fas fa-reply me-2"></i> Répondre
                             </button>
                         </form>
                         {% elif sujet.est_ferme %}
-                        <div class="alert alert-warning">
+                        <div class="alert alert-warning mb-0">
                             <i class="fas fa-lock me-2"></i> Ce sujet est fermé.
                         </div>
                         {% else %}
-                        <div class="alert alert-info">
+                        <div class="alert alert-info mb-0">
                             <i class="fas fa-info-circle me-2"></i>
-                            <a href="{% url 'login' %}" class="text-success">Connectez-vous</a> pour répondre.
+                            <a href="{% url 'login' %}" class="text-success fw-bold">Connectez-vous</a> pour répondre.
                         </div>
                         {% endif %}
                     </div>
@@ -75,7 +82,6 @@
         </div>
     </div>
 </section>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -83,26 +89,23 @@
 document.addEventListener('DOMContentLoaded', function() {
     const sujetId = "{{ sujet.id }}";
     const container = document.getElementById('forum-messages');
+    const countSpan = document.getElementById('nb-messages-count');
 
-    function verifierNouveauxMessages() {
-        // Récupère le dernier message affiché grâce au data-id
+    window.verifierNouveauxMessages = function() {
         const dernierMsg = container.querySelector('.message-item:last-child');
         const lastId = dernierMsg ? dernierMsg.dataset.id : 0;
 
-        // Requête AJAX vers l'API Django
-        fetch(`/forums/api/sujet/${sujetId}/nouvelles/?last_id=${lastId}`)
+        return fetch(`/forums/api/sujet/${sujetId}/nouvelles/?last_id=${lastId}`)
             .then(response => {
                 if (!response.ok) return null;
                 return response.json();
             })
             .then(data => {
                 if (data && data.reponses && data.reponses.length > 0) {
-                    // Masquer le texte "Aucun message" si présent
                     const noMsgText = document.getElementById('no-messages-text');
                     if (noMsgText) noMsgText.remove();
 
                     data.reponses.forEach(rep => {
-                        // Empêcher l'ajout en doublon si déjà dans la page
                         if (document.getElementById(`message-${rep.id}`)) return;
 
                         const msgDiv = document.createElement('div');
@@ -114,17 +117,38 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <strong>${rep.auteur}</strong>
                                 <small class="text-muted">${rep.date}</small>
                             </div>
-                            <div class="mb-0 mt-2">${rep.contenu}</div>
+                            <div class="mb-0 mt-2">${rep.contenu.replace(/\n/g, '<br>')}</div>
                         `;
                         container.appendChild(msgDiv);
                     });
+
+                    // Mise à jour dynamique du compteur de messages
+                    if (countSpan) {
+                        const totalMessages = container.querySelectorAll('.message-item').length;
+                        countSpan.textContent = totalMessages;
+                    }
                 }
             })
-            .catch(error => console.error("Erreur de récupération des messages:", error));
-    }
+            .catch(error => console.error("Erreur de récupération des messages :", error));
+    };
 
-    // Interroge le serveur toutes les 3 secondes (3000 ms)
-    setInterval(verifierNouveauxMessages, 3000);
+    window.actualiserSujet = function() {
+        const btn = document.getElementById('btn-refresh');
+        const icon = document.getElementById('icon-refresh');
+
+        if (btn) btn.disabled = true;
+        if (icon) icon.classList.add('fa-spin');
+
+        window.verifierNouveauxMessages().finally(() => {
+            setTimeout(() => {
+                if (btn) btn.disabled = false;
+                if (icon) icon.classList.remove('fa-spin');
+            }, 500);
+        });
+    };
+
+    // Polling automatique toutes les 3 secondes
+    setInterval(window.verifierNouveauxMessages, 3000);
 });
 </script>
 {% endblock %}
