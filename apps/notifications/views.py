@@ -21,7 +21,6 @@ def get_nouveaux_messages_api(request):
     if not membre_id:
         return JsonResponse({'messages': []})
 
-    # Utilisation du modèle MessagePrive au lieu de Message
     nouveaux_messages = MessagePrive.objects.filter(
         membre_id=membre_id,
         id__gt=last_id
@@ -40,13 +39,10 @@ def get_nouveaux_messages_api(request):
             elif ext in ['mp4', 'webm', 'ogg']:
                 est_video = True
 
-        # Détermine si le message vient d'un administrateur ou de l'utilisateur courant
-        est_admin = getattr(msg, 'est_message_admin', msg.expediteur.is_staff if msg.expediteur else False)
-
         data.append({
             "id": msg.id,
             "contenu": msg.contenu or "",
-            "est_message_admin": est_admin,
+            "est_me": msg.expediteur == request.user,
             "fichier_url": fichier_url,
             "est_image": est_image,
             "est_video": est_video,
