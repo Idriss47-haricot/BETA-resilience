@@ -68,3 +68,35 @@
     </div>
 </div>
 {% endblock %}
+
+<!-- Placez ce script juste avant </body> ou à la fin de votre template -->
+<script>
+    let lastMessageId = 0; // Stocke l'ID du dernier message affiché
+
+    function verifierNouveauxMessages() {
+        fetch(`/notifications/api/messages/nouveaux/?last_id=${lastMessageId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.messages && data.messages.length > 0) {
+                    const conteneur = document.getElementById('chat-messages'); // Remplacez par l'ID de votre conteneur de chat
+                    
+                    data.messages.forEach(msg => {
+                        // Création du bloc de message
+                        const msgElement = document.createElement('div');
+                        msgElement.className = 'message message-recu';
+                        msgElement.innerHTML = `<strong>${msg.expediteur}</strong> [${msg.created_at}]: <p>${msg.contenu}</p>`;
+                        
+                        conteneur.appendChild(msgElement);
+                        lastMessageId = msg.id; // Mise à jour du dernier ID
+                    });
+
+                    // Faire défiler vers le bas automatiquement
+                    conteneur.scrollTop = conteneur.scrollHeight;
+                }
+            })
+            .catch(error => console.error('Erreur lors du chargement des messages:', error));
+    }
+
+    // Interroger le serveur toutes les 3 secondes (3000 ms)
+    setInterval(verifierNouveauxMessages, 3000);
+</script>
