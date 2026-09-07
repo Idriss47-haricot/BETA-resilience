@@ -140,12 +140,12 @@
                 setTimeout(() => {
                     if (btn) btn.disabled = false;
                     if (icon) icon.classList.remove('fa-spin');
-                }, 500);
+                }, 400);
             });
         };
 
         setInterval(window.verifierNouveauxMessages, 3000);
     });
 </script>
-{% endif %} 
+{% endif %}
 {% endblock %}
