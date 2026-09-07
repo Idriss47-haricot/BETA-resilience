@@ -2,6 +2,7 @@
 
 {% block content %}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 
 <div class="container my-4">
     <div class="row">
@@ -11,11 +12,11 @@
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Choisir un membre</h5>
                 </div>
-                <div class="list-group list-group-flush">
+                <div class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
                     {% for m in membres %}
                         <a href="?membre_id={{ m.id }}" 
                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if membre_selectionne and membre_selectionne.id == m.id %}active{% endif %}">
-                            <span>{{ m.nom|default:m.user.username }}</span>
+                            <span>{{ m.nom|default:m.user.username }} {{ m.prenom|default:"" }}</span>
                         </a>
                     {% empty %}
                         <div class="p-3 text-muted">Aucun membre disponible.</div>
@@ -28,18 +29,32 @@
         <div class="col-md-8">
             {% if membre_selectionne %}
                 <div class="card shadow-sm">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0">Discussion avec {{ membre_selectionne.nom|default:membre_selectionne.user.username }}</h5>
+                    <!-- En-tête du Chat avec bouton Actualiser -->
+                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Discussion avec {{ membre_selectionne.nom|default:membre_selectionne.user.username }} {{ membre_selectionne.prenom|default:"" }}</h5>
+                        <button id="btn-refresh" class="btn btn-sm btn-light" onclick="actualiserMessages()" title="Actualiser la discussion">
+                            <i id="icon-refresh" class="bi bi-arrow-clockwise"></i> Actualiser
+                        </button>
                     </div>
                     
-                    <!-- Ajout de id="chat-messages" pour cibler le conteneur en JS -->
-                    <div id="chat-messages" class="card-body overflow-auto" style="height: 380px; background-color: #f8f9fa;">
+                    <!-- Zone d'affichage des messages -->
+                    <div id="chat-messages" class="card-body overflow-auto" style="height: 400px; background-color: #f8f9fa;">
                         {% for msg in conversation %}
-                            <!-- Ajout de data-id pour suivre le dernier message chargé -->
                             <div class="mb-3 d-flex {% if msg.expediteur == request.user %}justify-content-end{% else %}justify-content-start{% endif %}" data-id="{{ msg.id }}">
                                 <div class="p-3 rounded-3 style-msg {% if msg.expediteur == request.user %}bg-primary text-white{% else %}bg-white text-dark border{% endif %}" style="max-width: 75%;">
-                                    <p class="mb-1">{{ msg.contenu }}</p>
-                                    <small class="d-block text-end opacity-75" style="font-size: 0.7rem;">{{ msg.date_envoi|date:"H:i" }}</small>
+                                    {% if msg.contenu %}
+                                        <p class="mb-1">{{ msg.contenu }}</p>
+                                    {% endif %}
+                                    
+                                    {% if msg.fichier %}
+                                        <div class="mb-1">
+                                            <a href="{{ msg.fichier.url }}" target="_blank" class="{% if msg.expediteur == request.user %}text-white{% else %}text-primary{% endif %} text-decoration-underline">
+                                                <i class="bi bi-paperclip"></i> Fichier joint
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <small class="d-block text-end opacity-75" style="font-size: 0.7rem;">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
                                 </div>
                             </div>
                         {% empty %}
@@ -49,14 +64,20 @@
                         {% endfor %}
                     </div>
 
+                    <!-- Formulaire d'envoi -->
                     <div class="card-footer bg-white">
-                        <form method="post" action="?membre_id={{ membre_selectionne.id }}">
+                        <form method="post" action="?membre_id={{ membre_selectionne.id }}" enctype="multipart/form-data">
                             {% csrf_token %}
                             <input type="hidden" name="membre_id" value="{{ membre_selectionne.id }}">
                             <div class="input-group">
-                                <input type="text" name="contenu" class="form-control" placeholder="Écrivez votre message..." required>
+                                <input type="text" name="contenu" class="form-control" placeholder="Écrivez votre message...">
+                                <input type="file" name="fichier" class="d-none" id="file-input" onchange="updateFileName(this)">
+                                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('file-input').click()" title="Joindre un fichier">
+                                    <i class="bi bi-paperclip"></i>
+                                </button>
                                 <button class="btn btn-primary" type="submit">Envoyer</button>
                             </div>
+                            <small id="file-name" class="text-muted d-block mt-1" style="font-size: 0.8rem;"></small>
                         </form>
                     </div>
                 </div>
@@ -74,32 +95,42 @@
     const conteneur = document.getElementById('chat-messages');
     const membreId = "{{ membre_selectionne.id }}";
     
-    // Récupère l'ID du dernier message affiché au chargement initial
     let lastMessageElement = conteneur.querySelector('[data-id]:last-child');
     let lastMessageId = lastMessageElement ? lastMessageElement.getAttribute('data-id') : 0;
 
-    // Fait défiler le chat tout en bas au chargement
+    // Défilement automatique au bas au chargement
     conteneur.scrollTop = conteneur.scrollHeight;
 
     function verifierNouveauxMessages() {
-        fetch(`/notifications/api/messages/nouveaux/?membre_id=${membreId}&last_id=${lastMessageId}`)
+        return fetch(`/notifications/api/messages/nouveaux/?membre_id=${membreId}&last_id=${lastMessageId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.messages && data.messages.length > 0) {
-                    // Supprime le message "Aucun message..." si présent
                     const emptyMsg = document.getElementById('empty-msg');
                     if (emptyMsg) emptyMsg.remove();
 
                     data.messages.forEach(msg => {
-                        const isMe = msg.is_me; // Booléen envoyé par le serveur
+                        const isMe = msg.est_me;
                         
                         const msgDiv = document.createElement('div');
                         msgDiv.className = `mb-3 d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'}`;
                         msgDiv.setAttribute('data-id', msg.id);
 
+                        let mediaHtml = '';
+                        if (msg.fichier_url) {
+                            if (msg.est_image) {
+                                mediaHtml = `<div class="mb-1"><img src="${msg.fichier_url}" class="img-fluid rounded" style="max-height: 200px;"></div>`;
+                            } else if (msg.est_video) {
+                                mediaHtml = `<div class="mb-1"><video src="${msg.fichier_url}" controls style="max-width: 100%; max-height: 200px;"></video></div>`;
+                            } else {
+                                mediaHtml = `<div class="mb-1"><a href="${msg.fichier_url}" target="_blank" class="${isMe ? 'text-white' : 'text-primary'} text-decoration-underline"><i class="bi bi-paperclip"></i> Télécharger le fichier</a></div>`;
+                            }
+                        }
+
                         msgDiv.innerHTML = `
                             <div class="p-3 rounded-3 style-msg ${isMe ? 'bg-primary text-white' : 'bg-white text-dark border'}" style="max-width: 75%;">
-                                <p class="mb-1">${msg.contenu}</p>
+                                ${msg.contenu ? `<p class="mb-1">${msg.contenu}</p>` : ''}
+                                ${mediaHtml}
                                 <small class="d-block text-end opacity-75" style="font-size: 0.7rem;">${msg.date_envoi}</small>
                             </div>
                         `;
@@ -108,15 +139,48 @@
                         lastMessageId = msg.id;
                     });
 
-                    // Scroll automatique vers le bas lors de l'arrivée d'un nouveau message
                     conteneur.scrollTop = conteneur.scrollHeight;
                 }
             })
-            .catch(error => console.error('Erreur :', error));
+            .catch(error => console.error('Erreur de chargement :', error));
     }
 
-    // Vérification toutes les 3 secondes
+    function actualiserMessages() {
+        const btn = document.getElementById('btn-refresh');
+        const icon = document.getElementById('icon-refresh');
+        
+        if (btn) btn.disabled = true;
+        if (icon) icon.classList.add('spin-icon');
+
+        verifierNouveauxMessages().finally(() => {
+            setTimeout(() => {
+                if (btn) btn.disabled = false;
+                if (icon) icon.classList.remove('spin-icon');
+            }, 500);
+        });
+    }
+
+    function updateFileName(input) {
+        const fileNameDisplay = document.getElementById('file-name');
+        if (input.files && input.files[0]) {
+            fileNameDisplay.textContent = `Fichier sélectionné : ${input.files[0].name}`;
+        } else {
+            fileNameDisplay.textContent = '';
+        }
+    }
+
+    // Polling automatique toutes les 3 secondes
     setInterval(verifierNouveauxMessages, 3000);
 </script>
+
+<style>
+    .spin-icon {
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+    }
+    @keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+</style>
 {% endif %}
 {% endblock %}
