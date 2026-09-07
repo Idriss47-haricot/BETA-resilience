@@ -5,6 +5,23 @@ from django.db.models import Q
 
 from apps.membres.models import Membre
 from .models import MessagePrive, Notification
+from django.http import JsonResponse
+
+
+
+
+def get_nouveaux_messages_api(request):
+    """Renvoie la liste des messages sous format JSON"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Non autorisé'}, status=401)
+        
+    last_id = request.GET.get('last_id', 0)
+    messages = MessagePrive.objects.filter(
+        destinataire=request.user, 
+        id__gt=last_id
+    ).values('id', 'expediteur__username', 'contenu', 'date_envoi')
+    
+    return JsonResponse({'messages': list(messages)})
 
 
 @login_required
