@@ -1,13 +1,9 @@
 #!/bin/bash
-set -e
+# Installation des dépendances
+pip install -r requirements.txt
 
-echo "📦 Installation des dépendances..."
-python3 -m pip install -r requirements.txt --break-system-packages
+# Application des migrations directement sur Neon pendant le build Vercel
+python manage.py migrate --noinput
 
-echo "🗄️ Application des migrations..."
-python3 manage.py migrate --noinput
-
-echo "📁 Collecte des fichiers statiques..."
-python3 manage.py collectstatic --noinput
-
-echo "✅ Build terminé avec succès !"
+# Collecte des fichiers statiques
+python manage.py collectstatic --noinput
