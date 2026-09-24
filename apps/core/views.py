@@ -254,8 +254,13 @@ def admin_notifier_membres(request):
     return render(request, 'core/admin_notifier.html')
 
 def run_migrations_view(request):
+    # Sécurité simple via paramètre d'URL (ex: ?key=secret123)
+    secret_key = request.GET.get('key')
+    if secret_key != 'mon_secret_123':
+        return HttpResponse("<h1>Accès non autorisé</h1>", status=403)
+    
     try:
         call_command('migrate', interactive=False)
-        return HttpResponse("<h1>Success: Les migrations ont été appliquées avec succès !</h1>")
+        return HttpResponse("<h1>Succès : Les migrations ont été appliquées avec succès sur la base de données !</h1>")
     except Exception as e:
-        return HttpResponse(f"<h1>Erreur lors des migrations :</h1><pre>{str(e)}</pre>", status=500)
+        return HttpResponse(f"<h1>Erreur lors de la migration :</h1><pre>{str(e)}</pre>", status=500)
