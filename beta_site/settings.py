@@ -151,7 +151,8 @@ if IS_VERCEL:
 else:
     MEDIA_ROOT = BASE_DIR / 'media'
 
-# Configuration du stockage (Cloudinary vs Local / Vercel InMemory)
+# Configuration du stockage : utilisation de CompressedStaticFilesStorage
+# pour tolérer l'absence éventuelle de certains fichiers statiques (anti-erreur 500)
 if os.getenv('CLOUDINARY_CLOUD_NAME'):
     CLOUDINARY_STORAGE = {
         'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
@@ -163,7 +164,7 @@ if os.getenv('CLOUDINARY_CLOUD_NAME'):
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
 elif IS_VERCEL:
@@ -172,7 +173,7 @@ elif IS_VERCEL:
             "BACKEND": "django.core.files.storage.InMemoryStorage",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
 else:
@@ -181,7 +182,7 @@ else:
             "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
 
