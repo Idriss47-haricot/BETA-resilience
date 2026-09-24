@@ -258,4 +258,4 @@ def run_migrations_view(request):
         call_command('migrate', interactive=False)
         return HttpResponse("<h1>Success: Les migrations ont été appliquées avec succès !</h1>")
     except Exception as e:
-        return HttpResponse(f"<h1>Erreur lo
+        return HttpResponse(f"<h1>Erreur lors des migrations :</h1><pre>{str(e)}</pre>", status=500)
