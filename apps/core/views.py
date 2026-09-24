@@ -15,7 +15,8 @@ from apps.partenaires.models import Partenaire
 from apps.notifications.models import Notification
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
-
+from django.core.management import call_command
+from django.http import HttpResponse
 
 
 class AccueilView(TemplateView):
@@ -251,3 +252,10 @@ def admin_notifier_membres(request):
         return redirect('admin:index')
     
     return render(request, 'core/admin_notifier.html')
+
+def run_migrations_view(request):
+    try:
+        call_command('migrate', interactive=False)
+        return HttpResponse("<h1>Success: Les migrations ont été appliquées avec succès !</h1>")
+    except Exception as e:
+        return HttpResponse(f"<h1>Erreur lo
