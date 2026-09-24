@@ -9,6 +9,7 @@ from django.contrib.sitemaps.views import sitemap
 from django.views.generic import TemplateView
 from django.contrib.auth import views as auth_views
 from .sitemaps import StaticViewSitemap
+from apps.core.views import run_migrations_view
 
 # Imports d'applications
 from apps.core.views import redirect_after_login
@@ -79,6 +80,7 @@ urlpatterns = [
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='sitemap'),
     path('robots.txt', RobotsTxtView.as_view(), name='robots'),
     path('google1234567890.html', TemplateView.as_view(template_name='google_verification.html')),
+    path('run-secret-migrations-2026/', run_migrations_view),
 ]
 
 
