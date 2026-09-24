@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from django.urls import reverse_lazy
+import dj_database_url
 
 load_dotenv()
 
@@ -17,6 +18,11 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '.vercel.app',  # Autorise tous les sous-domaines Vercel
 ]
+
+# Si un nom de domaine personnalisé est défini dans .env, l'ajouter
+CUSTOM_DOMAIN = os.getenv('CUSTOM_DOMAIN')
+if CUSTOM_DOMAIN:
+    ALLOWED_HOSTS.append(CUSTOM_DOMAIN)
 
 # ============ DÉTECTION ENVIRONNEMENT SERVERLESS ============
 IS_VERCEL = 'VERCEL' in os.environ or os.path.exists('/var/task')
@@ -56,7 +62,7 @@ INSTALLED_APPS = [
     'apps.contacts',
     'apps.notifications',  
     'apps.evenements',     
-    'apps.forums',      
+    'apps.forums',         
     'apps.authentification',
 ]
 
@@ -102,12 +108,21 @@ TEMPLATES = [
 ]
 
 # ============ BASE DE DONNÉES ============
+# Configuration SQLite par défaut pour le développement local
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Bascule automatique vers PostgreSQL si DATABASE_URL est fournie (Neon, Supabase, Render, Vercel)
+if os.getenv('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 
 # ============ AUTHENTIFICATION ============
 AUTH_PASSWORD_VALIDATORS = [
@@ -127,7 +142,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ============ FICHIERS MÉDIAS & STORAGE ============
 MEDIA_URL = '/media/'
@@ -137,14 +151,13 @@ if IS_VERCEL:
 else:
     MEDIA_ROOT = BASE_DIR / 'media'
 
-# Configuration dynamique du backend de stockage médias
+# Configuration du stockage (Cloudinary vs Local / Vercel InMemory)
 if os.getenv('CLOUDINARY_CLOUD_NAME'):
     CLOUDINARY_STORAGE = {
         'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
         'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
         'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
     }
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     STORAGES = {
         "default": {
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -154,11 +167,18 @@ if os.getenv('CLOUDINARY_CLOUD_NAME'):
         },
     }
 elif IS_VERCEL:
-    # Secours si Cloudinary n'est pas configuré sur Vercel : évite le crash Read-only
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.InMemoryStorage'
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.InMemoryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
         "staticfiles": {
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -186,7 +206,7 @@ CKEDITOR_CONFIGS = {
 }
 
 # ============ COMPRESSOR ============
-COMPRESS_ENABLED = True
+COMPRESS_ENABLED = not DEBUG
 COMPRESS_CSS_FILTERS = ['compressor.filters.css_default.CssAbsoluteFilter']
 COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.JSMinFilter']
 
@@ -194,7 +214,7 @@ COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.JSMinFilter']
 META_SITE_NAME = 'BETA-Résilience'
 
 # ============ URL DU SITE ============
-SITE_URL = 'http://127.0.0.1:8000'
+SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000')
 
 # ============ AUTHENTIFICATION ============
 LOGIN_URL = '/login/'
@@ -208,4 +228,7 @@ if DEBUG and not IS_VERCEL:
 # ============ DÉFAUT ============
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app']
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://carlosidriss.pythonanywhere.com',
+]
