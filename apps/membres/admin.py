@@ -481,4 +481,4 @@ class HistoriqueEmailAdmin(admin.ModelAdmin):
                 e.date_envoi.strftime('%d/%m/%Y %H:%M') if e.date_envoi else ''
             ])
         return response
-    exporter_csv.short_description = '📊 Exporter en CSV'
+    exporter_csv.short_description = '📊 Exporter en CSV' 
