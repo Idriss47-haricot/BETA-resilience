@@ -1,0 +1,151 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+<div class="container my-4">
+    <div class="row">
+        <!-- Colonne Gauche : Liste des membres -->
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Choisir un membre</h5>
+                </div>
+                <div class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
+                    {% for m in membres %}
+                        <a href="?membre_id={{ m.id }}" 
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if membre_selectionne and membre_selectionne.id == m.id %}active{% endif %}">
+                            <span>{{ m.nom|default:m.user.username }} {{ m.prenom|default:"" }}</span>
+                        </a>
+                    {% empty %}
+                        <div class="p-3 text-muted">Aucun membre disponible.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne Droite : Chat -->
+        <div class="col-md-8">
+            {% if membre_selectionne %}
+                <div class="card shadow-sm">
+                    <!-- En-tête du Chat avec bouton Actualiser -->
+                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Discussion avec {{ membre_selectionne.nom|default:membre_selectionne.user.username }} {{ membre_selectionne.prenom|default:"" }}</h5>
+                        <button id="btn-refresh" class="btn btn-sm btn-light" onclick="actualiserMessages()" title="Actualiser la discussion">
+                            <i id="icon-refresh" class="bi bi-arrow-clockwise"></i> Actualiser
+                        </button>
+                    </div>
+                    
+                    <!-- Zone d'affichage des messages -->
+                    <div id="chat-messages" class="card-body overflow-auto" style="height: 400px; background-color: #f8f9fa;">
+                        {% for msg in conversation %}
+                            <div class="mb-3 d-flex {% if msg.expediteur == request.user %}justify-content-end{% else %}justify-content-start{% endif %}" data-id="{{ msg.id }}">
+                                <div class="p-3 rounded-3 style-msg {% if msg.expediteur == request.user %}bg-primary text-white{% else %}bg-white text-dark border{% endif %}" style="max-width: 75%;">
+                                    {% if msg.contenu %}
+                                        <p class="mb-1">{{ msg.contenu }}</p>
+                                    {% endif %}
+                                    <small class="d-block text-end opacity-75" style="font-size: 0.7rem;">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div id="empty-msg" class="text-center text-muted py-5">
+                                Aucun message échangé pour le moment. Envoyez le premier message !
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Formulaire d'envoi -->
+                    <div class="card-footer bg-white">
+                        <form method="post" action="?membre_id={{ membre_selectionne.id }}">
+                            {% csrf_token %}
+                            <input type="hidden" name="membre_id" value="{{ membre_selectionne.id }}">
+                            <div class="input-group">
+                                <input type="text" name="contenu" class="form-control" placeholder="Écrivez votre message..." required>
+                                <button class="btn btn-primary" type="submit">Envoyer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center mt-3 shadow-sm">
+                    Veuillez sélectionner un membre à gauche pour démarrer une conversation.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if membre_selectionne %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const conteneur = document.getElementById('chat-messages');
+        const membreId = "{{ membre_selectionne.id }}";
+        
+        let lastMessageElement = conteneur.querySelector('[data-id]:last-child');
+        let lastMessageId = lastMessageElement ? lastMessageElement.getAttribute('data-id') : 0;
+
+        conteneur.scrollTop = conteneur.scrollHeight;
+
+        window.verifierNouveauxMessages = function() {
+            return fetch(`/notifications/api/messages/nouveaux/?membre_id=${membreId}&last_id=${lastMessageId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.messages && data.messages.length > 0) {
+                        const emptyMsg = document.getElementById('empty-msg');
+                        if (emptyMsg) emptyMsg.remove();
+
+                        data.messages.forEach(msg => {
+                            const isMe = msg.est_me;
+                            
+                            const msgDiv = document.createElement('div');
+                            msgDiv.className = `mb-3 d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'}`;
+                            msgDiv.setAttribute('data-id', msg.id);
+
+                            msgDiv.innerHTML = `
+                                <div class="p-3 rounded-3 style-msg ${isMe ? 'bg-primary text-white' : 'bg-white text-dark border'}" style="max-width: 75%;">
+                                    ${msg.contenu ? `<p class="mb-1">${msg.contenu}</p>` : ''}
+                                    <small class="d-block text-end opacity-75" style="font-size: 0.7rem;">${msg.date_envoi}</small>
+                                </div>
+                            `;
+
+                            conteneur.appendChild(msgDiv);
+                            lastMessageId = msg.id;
+                        });
+
+                        conteneur.scrollTop = conteneur.scrollHeight;
+                    }
+                })
+                .catch(error => console.error('Erreur de chargement :', error));
+        };
+
+        window.actualiserMessages = function() {
+            const btn = document.getElementById('btn-refresh');
+            const icon = document.getElementById('icon-refresh');
+            
+            if (btn) btn.disabled = true;
+            if (icon) icon.classList.add('spin-icon');
+
+            window.verifierNouveauxMessages().finally(() => {
+                setTimeout(() => {
+                    if (btn) btn.disabled = false;
+                    if (icon) icon.classList.remove('spin-icon');
+                }, 400);
+            });
+        };
+
+        setInterval(window.verifierNouveauxMessages, 3000);
+    });
+</script>
+
+<style>
+    .spin-icon {
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+    }
+    @keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endif %}
+{% endblock %}

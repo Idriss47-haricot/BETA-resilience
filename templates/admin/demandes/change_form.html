@@ -1,0 +1,31 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block after_field_sets %}
+{% if original %}
+<div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #2E7D32;">
+    <h3>📋 Informations complémentaires</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 8px; font-weight: bold; width: 150px;">Date de soumission</td>
+            <td style="padding: 8px;">{{ original.date_soumission|date:"d/m/Y H:i" }}</td>
+        </tr>
+        {% if original.date_traitement %}
+        <tr>
+            <td style="padding: 8px; font-weight: bold;">Date de traitement</td>
+            <td style="padding: 8px;">{{ original.date_traitement|date:"d/m/Y H:i" }}</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td style="padding: 8px; font-weight: bold;">Adresse IP</td>
+            <td style="padding: 8px;">{{ original.ip_address|default:"Non renseignée" }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px; font-weight: bold;">User Agent</td>
+            <td style="padding: 8px; word-break: break-all;">{{ original.user_agent|default:"Non renseigné" }}</td>
+        </tr>
+    </table>
+</div>
+{% endif %}
+{{ block.super }}
+{% endblock %}

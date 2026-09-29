@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <h2>Espace d'Administration</h2>
+    <p>Bienvenue {{ request.user.username }} !</p>
+
+    <div class="row">
+        <!-- Action : Ajouter un membre -->
+        {% if perms.membres.add_membre %}
+        <div class="col-md-4 mb-3">
+            <div class="card p-3">
+                <h5>Ajouter un Membre</h5>
+                <a href="{% url 'membres:adhesion' %}" class="btn btn-primary btn-sm">Nouveau membre</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action : Modifier / Lister les membres -->
+        {% if perms.membres.change_membre %}
+        <div class="col-md-4 mb-3">
+            <div class="card p-3">
+                <h5>Gérer la liste des membres</h5>
+                <a href="{% url 'membres:equipe' %}" class="btn btn-info btn-sm text-white">Voir la liste</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action : Supprimer (ne s'affichera PAS pour l'admin restreint) -->
+        {% if perms.membres.delete_membre %}
+        <div class="col-md-4 mb-3 border-danger">
+            <div class="card p-3">
+                <h5 class="text-danger">Zone de Suppression</h5>
+                <p>Suppression définitive de membres.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

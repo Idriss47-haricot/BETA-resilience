@@ -1,0 +1,48 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static %}
+
+{% block content %}
+<div class="module">
+    <h2>📊 Tableau de bord des demandes</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px;">
+        <div style="flex: 1; min-width: 120px; text-align: center; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="font-size: 24px; font-weight: bold; color: #2E7D32;">{{ stats.total }}</div>
+            <div style="color: #666; font-size: 12px;">Total des demandes</div>
+        </div>
+        <div style="flex: 1; min-width: 120px; text-align: center; padding: 10px; background: #fff3cd; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="font-size: 24px; font-weight: bold; color: #856404;">{{ stats.en_attente }}</div>
+            <div style="color: #666; font-size: 12px;">En attente</div>
+        </div>
+        <div style="flex: 1; min-width: 120px; text-align: center; padding: 10px; background: #cce5ff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="font-size: 24px; font-weight: bold; color: #004085;">{{ stats.en_cours }}</div>
+            <div style="color: #666; font-size: 12px;">En cours</div>
+        </div>
+        <div style="flex: 1; min-width: 120px; text-align: center; padding: 10px; background: #d4edda; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="font-size: 24px; font-weight: bold; color: #155724;">{{ stats.traitees }}</div>
+            <div style="color: #666; font-size: 12px;">Traitées</div>
+        </div>
+        <div style="flex: 1; min-width: 120px; text-align: center; padding: 10px; background: #f8d7da; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="font-size: 24px; font-weight: bold; color: #721c24;">{{ stats.rejetees }}</div>
+            <div style="color: #666; font-size: 12px;">Rejetées</div>
+        </div>
+    </div>
+    
+    {% if stats.par_entite %}
+    <h3 style="margin-top: 10px;">📈 Répartition par entité</h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px;">
+        {% for stat in stats.par_entite %}
+        <div style="flex: 1; min-width: 150px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="font-weight: bold; color: #2E7D32;">{{ stat.entite|capfirst }}</div>
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <span style="font-size: 14px;">Total: <strong>{{ stat.total }}</strong></span>
+                <span style="font-size: 14px; color: #856404;">En attente: <strong>{{ stat.en_attente }}</strong></span>
+                <span style="font-size: 14px; color: #155724;">Traitées: <strong>{{ stat.traitees }}</strong></span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+{{ block.super }}
+{% endblock %}

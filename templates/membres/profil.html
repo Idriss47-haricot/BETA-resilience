@@ -1,0 +1,116 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Mon profil - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            {% if membre.photo %}
+                            <img src="{{ membre.photo.url }}" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                            {% else %}
+                            <i class="fas fa-user-circle" style="font-size: 5rem; color: #2E7D32;"></i>
+                            {% endif %}
+                        </div>
+                        <h5 class="fw-bold">{{ user.get_full_name|default:user.username }}</h5>
+                        <p class="text-muted small">{{ user.email }}</p>
+                        <span class="badge bg-success">Membre actif</span>
+                    </div>
+                </div>
+                
+                <div class="card border-0 shadow-sm mt-3">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'membres:dashboard' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tachometer-alt me-2"></i> Tableau de bord
+                        </a>
+                        <a href="{% url 'membres:profil' %}" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-user-edit me-2"></i> Mon profil
+                        </a>
+                        <a href="{% url 'membres:mes-demandes' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-file-alt me-2"></i> Mes demandes
+                        </a>
+                        <a href="{% url 'notifications:liste' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-bell me-2"></i> Notifications
+                        </a>
+                        <a href="{% url 'evenements:mes_evenements' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-calendar-check me-2"></i> Mes événements
+                        </a>
+                        <a href="{% url 'forums:index' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-comments me-2"></i> Forums
+                        </a>
+                        <a href="{% url 'logout' %}" class="list-group-item list-group-item-action text-danger">
+                            <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contenu principal -->
+            <div class="col-lg-9">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h4 class="mb-0 text-success">
+                            <i class="fas fa-user-edit me-2"></i> Mon profil
+                        </h4>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Nom</label>
+                                        {{ form.nom }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Prénom</label>
+                                        {{ form.prenom }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                                <small class="text-muted">L'email ne peut pas être modifié</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Téléphone</label>
+                                {{ form.telephone }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Biographie</label>
+                                {{ form.biographie }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Photo de profil</label>
+                                {{ form.photo }}
+                                <small class="text-muted">Formats acceptés : JPG, PNG (max 5 Mo)</small>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i> Enregistrer les modifications
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

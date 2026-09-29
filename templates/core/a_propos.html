@@ -1,0 +1,150 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}À Propos - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header py-5" style="background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold">À Propos de BETA-Résilience</h1>
+                <p class="lead">Expertise en résilience socio-environnementale</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb justify-content-lg-end" style="--bs-breadcrumb-divider: '>';">
+                        <li class="breadcrumb-item"><a href="{% url 'core:accueil' %}" class="text-white text-decoration-none">Accueil</a></li>
+                        <li class="breadcrumb-item active text-light" aria-current="page">À Propos</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sous-navigation -->
+<section class="sub-nav bg-light py-2 border-bottom">
+    <div class="container">
+        <ul class="nav nav-pills justify-content-center flex-wrap">
+            <li class="nav-item"><a class="nav-link active" href="{% url 'core:a_propos' %}">Présentation</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'core:historique' %}">Historique</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'core:vision' %}">Vision</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'core:missions' %}">Missions</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'core:structuration' %}">Structuration</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'membres:equipe' %}">Équipe</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'membres:adhesion' %}">Adhésion</a></li>
+        </ul>
+    </div>
+</section>
+
+<!-- Contenu principal -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="content" data-aos="fade-up">
+                    <h2 class="text-success">Présentation et objectif</h2>
+                    <p>
+                        Dans un monde marqué par de perpétuels bouleversements, le plus souvent contraignants pour l'homme et son environnement de vie, BETA-Résilience se propose comme un acteur à la recherche des solutions adaptées pour faire face aux problèmes socio-environnementaux qui se posent aux sociétés/communautés.
+                    </p>
+                    <p>
+                        Le choix du concept de résilience n'est donc pas stochastique. Parce que la résilience articule un phénomène psychologique qui consiste pour un individu affecté par un traumatisme, à prendre acte de l'événement traumatique de manière à ne pas vivre dans le malheur et à se reconstruire d'une manière acceptable.
+                    </p>
+                    <p>
+                        Mais la projection opérationnelle de BETA-Résilience ne se limite pas qu'aux individus, communautés et sociétés ; elle s'étend aux environnements naturels et artificialisés dans lesquels s'émeuvent les populations, pour redonner sens au couple Homme-Nature.
+                    </p>
+                    
+                    <h3 class="text-success mt-5">Les entités du Groupe</h3>
+                    <div class="row g-4 mt-3">
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="icon-box mb-3" style="font-size: 2.5rem; color: #2E7D32;">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <h5>BETA-Résilience Association</h5>
+                                    <p class="text-muted small">Entité à but non lucratif, opérationnelle depuis 2017.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="icon-box mb-3" style="font-size: 2.5rem; color: #2E7D32;">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                    <h5>BETA-Résilience Bureau d'étude</h5>
+                                    <p class="text-muted small">Société à Responsabilité Limitée (SARL) en cours de création.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="icon-box mb-3" style="font-size: 2.5rem; color: #2E7D32;">
+                                        <i class="fas fa-flask"></i>
+                                    </div>
+                                    <h5>Laboratoire RÉSILIENCE</h5>
+                                    <p class="text-muted small">Vocation essentiellement scientifique.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="icon-box mb-3" style="font-size: 2.5rem; color: #2E7D32;">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <h5>BETA-Résilience INVEST</h5>
+                                    <p class="text-muted small">Ancrage sur les questions économiques.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success mt-5" role="alert">
+                        <i class="fas fa-bullseye me-2"></i>
+                        <strong>Objectif global :</strong> Accompagner la recherche de solutions face aux challenges environnementaux, économiques et sociaux pour renforcer la résilience des populations du Cameroun et du monde entier.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistiques -->
+<section class="stats-section py-5" style="background: #f8f9fa;">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
+                    <h2 class="display-4 fw-bold text-success">30+</h2>
+                    <p class="text-muted">Membres</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
+                    <h2 class="display-4 fw-bold text-success">10+</h2>
+                    <p class="text-muted">Projets réalisés</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item" data-aos="fade-up" data-aos-delay="300">
+                    <h2 class="display-4 fw-bold text-success">5+</h2>
+                    <p class="text-muted">Années d'expérience</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item" data-aos="fade-up" data-aos-delay="400">
+                    <h2 class="display-4 fw-bold text-success">8+</h2>
+                    <p class="text-muted">Partenaires</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

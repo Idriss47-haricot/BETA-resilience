@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://beta-resilience-dn4m.vercel.app/sitemap.xml

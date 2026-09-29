@@ -1,0 +1,20 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="col-lg-7 mx-auto">
+            <div class="card border-0 shadow-sm p-4">
+                <h3 class="text-success">{{ demande.get_type_demande_display }}</h3>
+                <p><strong>Entité :</strong> {{ demande.get_entite_display }}</p>
+                <p><strong>Statut :</strong> {{ demande.get_statut_display }}</p>
+                <p><strong>Objet :</strong> {{ demande.objet }}</p>
+                <p><strong>Message :</strong><br>{{ demande.message|linebreaksbr }}</p>
+                {% if demande.commentaire_admin %}
+                <div class="alert alert-info"><strong>Réponse de l'administration :</strong><br>{{ demande.commentaire_admin }}</div>
+                {% endif %}
+                <a href="{% url 'membres:dashboard' %}" class="btn btn-outline-success mt-3">Retour</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

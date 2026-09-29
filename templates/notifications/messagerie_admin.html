@@ -1,0 +1,151 @@
+{% extends 'core/base.html' %}
+{% block title %}Messagerie - Administration{% endblock %}
+
+{% block content %}
+<section class="py-4">
+    <div class="container">
+        <h1 class="text-success mb-4"><i class="fas fa-comments me-2"></i> Messagerie</h1>
+        <div class="row">
+            <!-- Liste des membres -->
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light fw-bold">Choisir un membre</div>
+                    <div class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
+                        {% for m in membres %}
+                        <a href="{% url 'notifications:messagerie_admin_membre' m.id %}"
+                           class="list-group-item list-group-item-action {% if membre_selectionne and membre_selectionne.id == m.id %}active{% endif %}">
+                            {{ m.prenom }} {{ m.nom }}
+                            <small class="d-block {% if membre_selectionne and membre_selectionne.id == m.id %}text-white-50{% else %}text-muted{% endif %}">
+                                {{ m.get_entite_display }}
+                            </small>
+                        </a>
+                        {% empty %}
+                        <div class="p-3 text-muted">Aucun membre actif.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zone de discussion -->
+            <div class="col-md-8">
+                {% if membre_selectionne %}
+                <div class="card border-0 shadow-sm">
+                    <!-- En-tête avec bouton Actualiser -->
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Conversation avec {{ membre_selectionne.prenom }} {{ membre_selectionne.nom }}</span>
+                        <button id="btn-refresh" class="btn btn-sm btn-outline-success" onclick="actualiserMessages()" title="Actualiser les messages">
+                            <i id="icon-refresh" class="fas fa-sync-alt me-1"></i> Actualiser
+                        </button>
+                    </div>
+                    
+                    <!-- Conteneur des messages -->
+                    <div id="chat-messages" class="card-body" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;">
+                        {% for msg in fil_messages %}
+                        <div class="mb-3 {% if msg.est_message_admin %}text-end{% endif %}" data-id="{{ msg.id }}">
+                            <div class="d-inline-block p-2 rounded {% if msg.est_message_admin %}bg-success text-white{% else %}bg-white text-dark border{% endif %}" style="max-width: 75%;">
+                                {% if msg.contenu %}<div class="text-start">{{ msg.contenu|linebreaksbr }}</div>{% endif %}
+                                <small class="d-block mt-1 opacity-75 text-end" style="font-size: 0.7rem;">{{ msg.date_envoi|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div id="empty-msg" class="text-center text-muted py-5">
+                            Aucun message pour l'instant.
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Formulaire d'envoi -->
+                    <div class="card-footer bg-white">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-2">
+                                <textarea name="contenu" class="form-control" rows="2" placeholder="Votre message..." required></textarea>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-paper-plane me-1"></i> Envoyer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card border-0 shadow-sm text-center text-muted py-5">
+                    <i class="fas fa-hand-pointer fa-2x mb-3"></i>
+                    <p class="mb-0">Sélectionnez un membre à gauche pour démarrer une conversation.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if membre_selectionne %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const conteneur = document.getElementById('chat-messages');
+        const membreId = "{{ membre_selectionne.id }}";
+        
+        let lastMessageElement = conteneur.querySelector('[data-id]:last-child');
+        let lastMessageId = lastMessageElement ? lastMessageElement.getAttribute('data-id') : 0;
+
+        conteneur.scrollTop = conteneur.scrollHeight;
+
+        window.verifierNouveauxMessages = function() {
+            return fetch(`/notifications/api/messages/nouveaux/?membre_id=${membreId}&last_id=${lastMessageId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.messages && data.messages.length > 0) {
+                        const emptyMsg = document.getElementById('empty-msg');
+                        if (emptyMsg) emptyMsg.remove();
+
+                        data.messages.forEach(msg => {
+                            const isAdmin = msg.est_message_admin;
+                            
+                            const msgWrapper = document.createElement('div');
+                            msgWrapper.className = `mb-3 ${isAdmin ? 'text-end' : ''}`;
+                            msgWrapper.setAttribute('data-id', msg.id);
+
+                            let contentHtml = '';
+                            if (msg.contenu) {
+                                contentHtml += `<div class="text-start">${msg.contenu.replace(/\n/g, '<br>')}</div>`;
+                            }
+
+                            contentHtml += `<small class="d-block mt-1 opacity-75 text-end" style="font-size: 0.7rem;">${msg.date_envoi}</small>`;
+
+                            msgWrapper.innerHTML = `
+                                <div class="d-inline-block p-2 rounded ${isAdmin ? 'bg-success text-white' : 'bg-white text-dark border'}" style="max-width: 75%;">
+                                    ${contentHtml}
+                                </div>
+                            `;
+
+                            conteneur.appendChild(msgWrapper);
+                            lastMessageId = msg.id;
+                        });
+
+                        conteneur.scrollTop = conteneur.scrollHeight;
+                    }
+                })
+                .catch(error => console.error('Erreur lors de la récupération des messages :', error));
+        };
+
+        window.actualiserMessages = function() {
+            const btn = document.getElementById('btn-refresh');
+            const icon = document.getElementById('icon-refresh');
+            
+            if (btn) btn.disabled = true;
+            if (icon) icon.classList.add('fa-spin');
+
+            window.verifierNouveauxMessages().finally(() => {
+                setTimeout(() => {
+                    if (btn) btn.disabled = false;
+                    if (icon) icon.classList.remove('fa-spin');
+                }, 400);
+            });
+        };
+
+        setInterval(window.verifierNouveauxMessages, 3000);
+    });
+</script>
+{% endif %}
+{% endblock %}

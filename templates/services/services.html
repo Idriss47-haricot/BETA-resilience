@@ -1,0 +1,69 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Nos Services - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header py-5" style="background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white;">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Nos Services</h1>
+        <p class="lead">Des prestations de qualité pour accompagner votre projet</p>
+    </div>
+</section>
+
+<!-- Services -->
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            {% for service in services %}
+            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:100 }}">
+                <div class="card service-card h-100 border-0 shadow-sm hover-shadow transition">
+                    <div class="card-body text-center p-4">
+                        <div class="service-icon mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; background: #e8f5e9; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #2E7D32;">
+                            <i class="{{ service.icone|default:'fas fa-cog' }}"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">{{ service.titre }}</h5>
+                        <p class="card-text text-muted small">{{ service.description_courte }}</p>
+                        <a href="{% url 'services:detail' service.slug %}" class="btn btn-outline-success btn-sm">
+                            En savoir plus <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center text-muted">
+                <p>Aucun service disponible pour le moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Appel à l'action -->
+<section class="py-5" style="background: #f8f9fa;">
+    <div class="container text-center">
+        <h3 class="text-success">Besoin d'un service personnalisé ?</h3>
+        <p class="text-muted">Contactez-nous pour discuter de votre projet</p>
+        <a href="{% url 'contacts:contact' %}" class="btn btn-success btn-lg">
+            <i class="fas fa-envelope me-2"></i> Nous contacter
+        </a>
+    </div>
+</section>
+
+<style>
+.service-card:hover {
+    transform: translateY(-8px);
+}
+.service-icon {
+    transition: all 0.3s ease;
+}
+.service-card:hover .service-icon {
+    background: #2E7D32 !important;
+    color: white !important;
+    transform: scale(1.1);
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,150 @@
+{% load static %}
+
+<div class="modal-body p-4">
+    <div id="entite-info" class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        Vous soumettez une demande pour : 
+        <strong id="entite-nom">BETA-Résilience</strong>
+    </div>
+    
+    <form method="post" action="{% url 'demandes:soumettre' %}" enctype="multipart/form-data" id="demandeForm">
+        {% csrf_token %}
+        
+        <!-- Champ honeypot pour anti-spam -->
+        <input type="text" name="honeypot" class="d-none" value="" tabindex="-1" autocomplete="off">
+        
+        <!-- Champ entité caché -->
+        <input type="hidden" name="entite" id="id_entite_hidden" value="{{ entite|default:'association' }}">
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nom <span class="text-danger">*</span></label>
+                    <input type="text" name="nom" class="form-control" required placeholder="Votre nom" value="{{ request.user.last_name|default:'' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Prénom <span class="text-danger">*</span></label>
+                    <input type="text" name="prenom" class="form-control" required placeholder="Votre prénom" value="{{ request.user.first_name|default:'' }}">
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                    <input type="email" name="email" class="form-control" required placeholder="votre@email.com" value="{{ request.user.email|default:'' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Téléphone <span class="text-danger">*</span></label>
+                    <input type="tel" name="telephone" class="form-control" required placeholder="6XX-XXX-XXX">
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Type de demande <span class="text-danger">*</span></label>
+                    <select name="type_demande" id="id_type_demande" class="form-select" required onchange="handleTypeChange(this)">
+                        <option value="">Sélectionnez un type</option>
+                        
+                        <optgroup label="Association" id="grp-association">
+                            <option value="adhesion">Adhésion</option>
+                            <option value="benefice">Bénévolat</option>
+                            <option value="don">Don</option>
+                            <option value="partenariat">Partenariat associatif</option>
+                            <option value="information">Demande d'information</option>
+                        </optgroup>
+                        
+                        <optgroup label="Bureau d'étude" id="grp-bureau_etude">
+                            <option value="etude">Étude environnementale</option>
+                            <option value="expertise">Expertise technique</option>
+                            <option value="conseil">Conseil stratégique</option>
+                            <option value="formation">Formation</option>
+                            <option value="prestation">Prestation de service</option>
+                        </optgroup>
+
+                        <optgroup label="Investissement" id="grp-invest">
+                            <option value="investissement">Investissement</option>
+                            <option value="partenariat">Partenariat économique</option>
+                            <option value="financement">Financement de projet</option>
+                            <option value="conseil">Conseil en investissement</option>
+                        </optgroup>
+
+                        <optgroup label="Laboratoire" id="grp-laboratoire">
+                            <option value="collaboration">Collaboration scientifique</option>
+                            <option value="recherche">Projet de recherche</option>
+                            <option value="publication">Publication scientifique</option>
+                            <option value="stage">Stage / Recherche</option>
+                            <option value="partenariat">Partenariat académique</option>
+                        </optgroup>
+                        
+                        <option value="autre">Autre (précisez)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6" id="autre_type_container" style="display: none;">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Autre type (précisez)</label>
+                    <input type="text" name="autre_type" id="id_autre_type" class="form-control" placeholder="Précisez votre type de demande">
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Société / Institution</label>
+                    <input type="text" name="societe" class="form-control" placeholder="Nom de votre société (optionnel)">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Fonction</label>
+                    <input type="text" name="fonction" class="form-control" placeholder="Votre fonction (optionnel)">
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label fw-bold">Objet de la demande <span class="text-danger">*</span></label>
+            <input type="text" name="objet" class="form-control" required placeholder="Sujet de votre demande">
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label fw-bold">Message <span class="text-danger">*</span></label>
+            <textarea name="message" class="form-control" rows="4" required placeholder="Décrivez votre demande en détail..."></textarea>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label fw-bold">Document joint (optionnel)</label>
+            <input type="file" name="fichier" class="form-control">
+            <small class="text-muted">Formats acceptés : PDF, DOC, DOCX (max 5 Mo)</small>
+        </div>
+        
+        <button type="submit" class="btn btn-success w-100 btn-lg">
+            <i class="fas fa-paper-plane me-2"></i> Envoyer ma demande
+        </button>
+    </form>
+</div>
+
+<script>
+function handleTypeChange(selectElem) {
+    var autreContainer = document.getElementById('autre_type_container');
+    var autreInput = document.getElementById('id_autre_type');
+    
+    if (selectElem.value === 'autre') {
+        autreContainer.style.display = 'block';
+        autreInput.setAttribute('required', 'required');
+    } else {
+        autreContainer.style.display = 'none';
+        autreInput.removeAttribute('required');
+        autreInput.value = '';
+    }
+}
+</script>

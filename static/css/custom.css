@@ -1,0 +1,88 @@
+/* ============================================
+   STYLES PERSONNALISÉS POUR BETA-RÉSILIENCE
+   ============================================ */
+
+/* ===== ENTITÉ CARDS ===== */
+.entite-card {
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+.entite-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.12) !important;
+}
+
+.entite-card .entite-icon {
+    transition: all 0.3s ease;
+}
+.entite-card:hover .entite-icon {
+    transform: scale(1.1);
+}
+
+.entite-card .btn-soumettre {
+    transition: all 0.3s ease;
+}
+.entite-card .btn-soumettre:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* ===== MODAL ===== */
+.modal-content {
+    border-radius: 16px;
+    border: none;
+}
+.modal-header {
+    border-radius: 16px 16px 0 0;
+}
+
+/* ===== STATS ===== */
+.stat-item {
+    transition: all 0.3s ease;
+}
+.stat-item:hover {
+    transform: translateY(-5px);
+}
+
+/* ===== SECTION TITLE ===== */
+.section-title::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: #2E7D32;
+    margin: 10px auto;
+    border-radius: 2px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .entite-card {
+        margin-bottom: 15px;
+    }
+    .hero-section .display-4 {
+        font-size: 2rem;
+    }
+    .modal-dialog {
+        margin: 10px;
+    }
+}
+
+/* ===== FORMULAIRES ===== */
+.form-control:focus {
+    border-color: #2E7D32;
+    box-shadow: 0 0 0 0.2rem rgba(46, 125, 50, 0.25);
+}
+
+/* ===== BOUTONS ===== */
+.btn-success {
+    background-color: #2E7D32;
+    border-color: #2E7D32;
+}
+.btn-success:hover {
+    background-color: #1B5E20;
+    border-color: #1B5E20;
+}

@@ -1,0 +1,82 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Historique - BETA-Résilience{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header py-5" style="background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white;">
+    <div class="container">
+        <h1 class="display-4 fw-bold">Historique</h1>
+        <p class="lead">L'histoire de BETA-Résilience</p>
+    </div>
+</section>
+
+<!-- Contenu -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="content" data-aos="fade-up">
+                    <h2 class="text-success">Notre Histoire</h2>
+                    <p>
+                        À l'origine, le Bureau Technique d'Appui à la Résilience socio-environnementale (BETA-Résilience) est une association de droit camerounaise, à but non lucratif, créée en 2017 par Récépissé de déclaration N°00000819/RDA/J06/A2/SAAJP/BAPP du 26 Août 2017 avec son siège social à Yaoundé.
+                    </p>
+                    
+                    <!-- Timeline -->
+                    <div class="timeline mt-5">
+                        {% for item in timeline %}
+                        <div class="timeline-item" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:100 }}">
+                            <div class="timeline-badge">
+                                <span class="badge bg-success rounded-circle p-3">{{ item.annee }}</span>
+                            </div>
+                            <div class="timeline-content ps-4 pb-4">
+                                <h4 class="text-success">{{ item.titre }}</h4>
+                                <p class="text-muted">{{ item.description }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <style>
+                        .timeline-item {
+                            position: relative;
+                            padding-left: 20px;
+                            border-left: 3px solid #2E7D32;
+                        }
+                        .timeline-item:last-child {
+                            border-left: 3px solid transparent;
+                        }
+                        .timeline-badge {
+                            position: relative;
+                            margin-left: -38px;
+                            margin-top: 10px;
+                        }
+                        .timeline-badge .badge {
+                            width: 60px;
+                            height: 60px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 14px;
+                            font-weight: bold;
+                        }
+                        .timeline-content {
+                            margin-left: 30px;
+                        }
+                    </style>
+                    
+                    <p class="mt-4">
+                        Avant cette date, l'association avait un fonctionnement informel autour d'un groupe d'amis et de camarades de l'Université de Yaoundé I. L'idée de créer une association est née sous l'impulsion de Dr Eric Voundi qui faisait remarquer à ses amis l'importance des challenges environnementaux, sociaux, économiques et de gouvernance auxquels les sociétés font face au Cameroun, comme ailleurs dans le monde.
+                    </p>
+                    <p>
+                        Avec le temps, précisément depuis 2021, l'idée d'association a évolué pour donner lieu à la création d'un Groupe qui regroupe six principales entités inter-opérationnelles.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

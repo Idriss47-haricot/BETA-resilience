@@ -1,0 +1,15 @@
+{% extends 'core/base.html' %}
+{% block title %}Nouvelle demande - BETA-Résilience{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card border-0 shadow-sm">
+                    {% include 'demandes/demande_form.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
