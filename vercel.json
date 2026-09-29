@@ -1,28 +1,19 @@
 {
+  "buildCommand": "python manage.py migrate --noinput && python manage.py collectstatic --noinput",
   "builds": [
     {
-      "src": "beta_site/wsgi.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb"
-      }
-    },
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "staticfiles"
-      }
+      "src": "config/wsgi.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
-      "src": "/media/(.*)",
-      "dest": "/media/$1"
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "beta_site/wsgi.py"
+      "dest": "config/wsgi.py"
     }
   ]
 }
