@@ -1,5 +1,5 @@
 """
-Administration de l'application Membres - Version optimisée et corrigée
+Administration de l'application Membres
 """
 import csv
 from io import BytesIO
@@ -45,8 +45,11 @@ class FonctionAdmin(admin.ModelAdmin):
     ordering = ('ordre',)
 
 
-# Gestion personnalisée du modèle User
-admin.site.unregister(User)
+# Re-enregistrement du User par défaut
+try:
+    admin.site.unregister(User)
+except admin.sites.NotRegistered:
+    pass
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -58,9 +61,6 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(Membre, site=admin_site)
 class MembreAdmin(admin.ModelAdmin):
-    """
-    Administration globale des membres
-    """
     list_display = (
         'get_photo_preview',
         'nom_complet',
@@ -79,40 +79,17 @@ class MembreAdmin(admin.ModelAdmin):
     list_select_related = ('user', 'fonction')
 
     fieldsets = (
-        ('🔐 Compte utilisateur', {
-            'fields': ('user',)
-        }),
-        ('👤 Informations personnelles', {
-            'fields': ('entite', 'nom', 'prenom', 'photo', 'fonction', 'statut', 'biographie')
-        }),
-        ('📞 Contact', {
-            'fields': ('email', 'telephone')
-        }),
-        ('🔗 Réseaux sociaux', {
-            'fields': ('linkedin', 'twitter', 'researchgate', 'google_scholar'),
-            'classes': ('collapse',)
-        }),
-        ('📋 Adhésion et activation', {
-            'fields': ('est_actif', 'est_membre_bureau', 'est_compte_active', 'date_validation')
-        }),
-        ('🔑 Token d\'activation', {
-            'fields': ('token_activation', 'token_expiration', 'date_invitation'),
-            'classes': ('collapse',)
-        }),
-        ('🔗 URL', {
-            'fields': ('slug',),
-            'classes': ('collapse',)
-        }),
+        ('🔐 Compte utilisateur', {'fields': ('user',)}),
+        ('👤 Informations personnelles', {'fields': ('entite', 'nom', 'prenom', 'photo', 'fonction', 'statut', 'biographie')}),
+        ('📞 Contact', {'fields': ('email', 'telephone')}),
+        ('🔗 Réseaux sociaux', {'fields': ('linkedin', 'twitter', 'researchgate', 'google_scholar'), 'classes': ('collapse',)}),
+        ('📋 Adhésion et activation', {'fields': ('est_actif', 'est_membre_bureau', 'est_compte_active', 'date_validation')}),
+        ('🔑 Token d\'activation', {'fields': ('token_activation', 'token_expiration', 'date_invitation'), 'classes': ('collapse',)}),
+        ('🔗 URL', {'fields': ('slug',), 'classes': ('collapse',)}),
     )
 
     readonly_fields = (
-        'date_adhesion',
-        'created_at',
-        'updated_at',
-        'token_activation',
-        'token_expiration',
-        'date_invitation',
-        'date_validation'
+        'date_adhesion', 'created_at', 'updated_at', 'token_activation', 'token_expiration', 'date_invitation', 'date_validation'
     )
 
     actions = ['exporter_csv', 'exporter_pdf_par_entite', 'activer_membres', 'desactiver_membres']
@@ -146,24 +123,16 @@ class MembreAdmin(admin.ModelAdmin):
     def exporter_csv(self, request, queryset):
         response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
         response['Content-Disposition'] = 'attachment; filename="membres.csv"'
-
         writer = csv.writer(response)
-        writer.writerow([
-            'Nom', 'Prénom', 'Email', 'Téléphone', 'Fonction', 'Actif', 'Compte activé', 'Date validation'
-        ])
-
+        writer.writerow(['Nom', 'Prénom', 'Email', 'Téléphone', 'Fonction', 'Actif', 'Compte activé', 'Date validation'])
         for membre in queryset:
             writer.writerow([
-                membre.nom,
-                membre.prenom,
-                membre.email,
-                membre.telephone or '',
+                membre.nom, membre.prenom, membre.email, membre.telephone or '',
                 membre.fonction.nom if membre.fonction else '',
                 'Oui' if membre.est_actif else 'Non',
                 'Oui' if membre.est_compte_active else 'Non',
                 membre.date_validation.strftime('%d/%m/%Y') if membre.date_validation else ''
             ])
-
         return response
     exporter_csv.short_description = '📊 Exporter les membres en CSV'
 
@@ -185,10 +154,7 @@ class MembreAdmin(admin.ModelAdmin):
             data = [['Nom', 'Prénom', 'Email', 'Téléphone', 'Date d\'adhésion']]
             for m in membres_entite:
                 data.append([
-                    m.nom,
-                    m.prenom,
-                    m.email,
-                    m.telephone or '-',
+                    m.nom, m.prenom, m.email, m.telephone or '-',
                     m.date_adhesion.strftime('%d/%m/%Y') if m.date_adhesion else '-',
                 ])
 
@@ -208,7 +174,6 @@ class MembreAdmin(admin.ModelAdmin):
 
         doc.build(elements)
         buffer.seek(0)
-
         response = HttpResponse(buffer, content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="membres_beta_resilience.pdf"'
         return response
@@ -226,7 +191,6 @@ class MembreAdmin(admin.ModelAdmin):
 
 
 class MembreEntiteAdminBase(MembreAdmin):
-    """Base commune pour les 4 rubriques par entité"""
     entite_code = None
 
     def get_queryset(self, request):
@@ -273,26 +237,14 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
     list_select_related = ('membre',)
 
     fieldsets = (
-        ('📋 Informations du demandeur', {
-            'fields': ('nom', 'prenom', 'email', 'telephone', 'date_naissance', 'profession')
-        }),
-        ('📝 Motivation et compétences', {
-            'fields': ('motivation', 'competences')
-        }),
-        ('📄 Documents', {
-            'fields': ('cv', 'lettre_motivation')
-        }),
-        ('⚙️ Traitement', {
-            'fields': ('statut', 'commentaire_admin')
-        }),
-        ('🔗 Membre associé', {
-            'fields': ('membre',),
-            'classes': ('collapse',)
-        }),
+        ('📋 Informations du demandeur', {'fields': ('nom', 'prenom', 'email', 'telephone', 'date_naissance', 'profession')}),
+        ('📝 Motivation et compétences', {'fields': ('motivation', 'competences')}),
+        ('📄 Documents', {'fields': ('cv', 'lettre_motivation')}),
+        ('⚙️ Traitement', {'fields': ('statut', 'commentaire_admin')}),
+        ('🔗 Membre associé', {'fields': ('membre',), 'classes': ('collapse',)}),
         ('💡 Instructions', {
             'description': mark_safe(
-                "Pour accepter, refuser ou renvoyer une invitation à une ou plusieurs demandes, "
-                "veuillez utiliser le menu déroulant <b>'Action'</b> situé en bas ou en haut du tableau de la liste des demandes."
+                "Pour accepter, refuser ou renvoyer une invitation, sélectionnez les lignes puis utilisez le menu déroulant <b>'Action'</b>."
             ),
             'fields': (),
         }),
@@ -335,7 +287,6 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
     email_envoye_badge.short_description = 'Email'
 
     def _traiter_acceptation(self, request, demande):
-        """Méthode utilitaire commune pour créer le membre et envoyer ses identifiants"""
         if not demande.membre:
             membre = Membre.objects.create(
                 nom=demande.nom,
@@ -353,32 +304,19 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
             demande.statut = 'acceptee'
             demande.date_traitement = timezone.now()
             demande.save()
-            self.message_user(
-                request,
-                f'✅ Identifiants envoyés à {demande.prenom} {demande.nom} (username: {username})'
-            )
+            self.message_user(request, f'✅ Identifiants envoyés à {demande.prenom} {demande.nom} (username: {username})')
             return True
         else:
-            self.message_user(
-                request,
-                f'⚠️ Erreur lors de l\'envoi des identifiants pour {demande.prenom} {demande.nom}',
-                level=messages.ERROR
-            )
+            self.message_user(request, f'⚠️ Erreur d\'envoi pour {demande.prenom} {demande.nom}', level=messages.ERROR)
             return False
 
     def accepter_et_envoyer_identifiants(self, request, queryset):
         count = 0
         erreurs = 0
-
         for demande in queryset:
             if demande.statut == 'acceptee':
-                self.message_user(
-                    request,
-                    f'⚠️ La demande de {demande.prenom} {demande.nom} est déjà acceptée.',
-                    level=messages.WARNING
-                )
+                self.message_user(request, f'⚠️ La demande de {demande.prenom} {demande.nom} est déjà acceptée.', level=messages.WARNING)
                 continue
-
             if self._traiter_acceptation(request, demande):
                 count += 1
             else:
@@ -386,8 +324,6 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
 
         if count > 0:
             self.message_user(request, f'✅ {count} demande(s) acceptée(s) et identifiants envoyés !')
-        if erreurs > 0:
-            self.message_user(request, f'⚠️ {erreurs} erreur(s) lors de l\'envoi des identifiants.', level=messages.ERROR)
 
     accepter_et_envoyer_identifiants.short_description = '✅ Accepter + Envoyer les identifiants'
 
@@ -400,12 +336,8 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
                     envoyer_refus(demande, request)
                     count += 1
                 except Exception as e:
-                    self.message_user(
-                        request,
-                        f'⚠️ Erreur pour {demande.prenom} {demande.nom}: {str(e)}',
-                        level=messages.ERROR
-                    )
-        self.message_user(request, f'✅ {count} demande(s) refusée(s) et email(s) envoyé(s).')
+                    self.message_user(request, f'⚠️ Erreur pour {demande.prenom} {demande.nom}: {str(e)}', level=messages.ERROR)
+        self.message_user(request, f'✅ {count} demande(s) refusée(s).')
     refuser_demandes.short_description = '❌ Refuser + Envoyer l\'email de refus'
 
     def renvoyer_invitations(self, request, queryset):
@@ -417,31 +349,21 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
                     envoyer_invitation(demande, request)
                     count += 1
                 except Exception as e:
-                    self.message_user(
-                        request,
-                        f'⚠️ Erreur pour {demande.prenom} {demande.nom}: {str(e)}',
-                        level=messages.ERROR
-                    )
+                    self.message_user(request, f'⚠️ Erreur pour {demande.prenom} {demande.nom}: {str(e)}', level=messages.ERROR)
         self.message_user(request, f'✅ {count} invitation(s) renvoyée(s).')
     renvoyer_invitations.short_description = '📧 Renvoyer l\'invitation'
 
     def exporter_csv(self, request, queryset):
         response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
         response['Content-Disposition'] = 'attachment; filename="demandes_adhesion.csv"'
-
         writer = csv.writer(response)
         writer.writerow(['Nom', 'Prénom', 'Email', 'Téléphone', 'Statut', 'Date soumission'])
-
         for d in queryset:
             writer.writerow([
-                d.nom,
-                d.prenom,
-                d.email,
-                d.telephone or '',
+                d.nom, d.prenom, d.email, d.telephone or '',
                 d.get_statut_display(),
                 d.date_soumission.strftime('%d/%m/%Y %H:%M') if d.date_soumission else ''
             ])
-
         return response
     exporter_csv.short_description = '📊 Exporter en CSV'
 
@@ -461,28 +383,17 @@ class DemandeAdhesionAdmin(admin.ModelAdmin):
                 try:
                     self._traiter_acceptation(request, obj)
                 except Exception as e:
-                    self.message_user(
-                        request,
-                        f'⚠️ Erreur lors de l\'acceptation: {str(e)}',
-                        level=messages.ERROR
-                    )
+                    self.message_user(request, f'⚠️ Erreur lors de l\'acceptation: {str(e)}', level=messages.ERROR)
             elif obj.statut == 'refusee':
                 try:
                     envoyer_refus(obj, request)
                     self.message_user(request, f'✅ Email de refus envoyé à {obj.email}')
                 except Exception as e:
-                    self.message_user(
-                        request,
-                        f'⚠️ Erreur lors de l\'envoi du refus: {str(e)}',
-                        level=messages.ERROR
-                    )
+                    self.message_user(request, f'⚠️ Erreur lors de l\'envoi du refus: {str(e)}', level=messages.ERROR)
 
 
 @admin.register(HistoriqueEmail, site=admin_site)
 class HistoriqueEmailAdmin(admin.ModelAdmin):
-    """
-    Administration de l'historique des emails
-    """
     list_display = (
         'destinataire',
         'get_type_email_badge',
@@ -498,18 +409,10 @@ class HistoriqueEmailAdmin(admin.ModelAdmin):
     list_select_related = ('membre', 'demande')
 
     fieldsets = (
-        ('📧 Informations sur l\'email', {
-            'fields': ('type_email', 'sujet', 'destinataire', 'contenu')
-        }),
-        ('🔗 Liens associés', {
-            'fields': ('membre', 'demande', 'token')
-        }),
-        ('📊 Statut', {
-            'fields': ('statut', 'message_erreur')
-        }),
-        ('👤 Administration', {
-            'fields': ('admin_nom', 'ip_admin')
-        }),
+        ('📧 Informations sur l\'email', {'fields': ('type_email', 'sujet', 'destinataire', 'contenu')}),
+        ('🔗 Liens associés', {'fields': ('membre', 'demande', 'token')}),
+        ('📊 Statut', {'fields': ('statut', 'message_erreur')}),
+        ('👤 Administration', {'fields': ('admin_nom', 'ip_admin')}),
     )
 
     readonly_fields = ('date_envoi',)
@@ -571,18 +474,12 @@ class HistoriqueEmailAdmin(admin.ModelAdmin):
     def exporter_csv(self, request, queryset):
         response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
         response['Content-Disposition'] = 'attachment; filename="historique_emails.csv"'
-
         writer = csv.writer(response)
         writer.writerow(['Destinataire', 'Type', 'Sujet', 'Statut', 'Date d\'envoi'])
-
         for e in queryset:
             writer.writerow([
-                e.destinataire,
-                e.type_email,
-                e.sujet,
-                e.statut,
+                e.destinataire, e.type_email, e.sujet, e.statut,
                 e.date_envoi.strftime('%d/%m/%Y %H:%M') if e.date_envoi else ''
             ])
-
         return response
     exporter_csv.short_description = '📊 Exporter en CSV'
