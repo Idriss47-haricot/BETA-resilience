@@ -45,7 +45,6 @@ class FonctionAdmin(admin.ModelAdmin):
     ordering = ('ordre',)
 
 
-# Re-enregistrement du User par défaut
 try:
     admin.site.unregister(User)
 except admin.sites.NotRegistered:
